@@ -14,6 +14,7 @@ export interface GmailMessage {
   };
   labelIds: string[];
   threadId: string;
+  internalDate?: string;
 }
 
 export interface UserProfile {
@@ -250,5 +251,11 @@ export class GmailAPI {
   getSubject(message: GmailMessage): string {
     const subjectHeader = message.payload.headers.find(h => h.name === 'Subject');
     return subjectHeader?.value || '';
+  }
+
+  // Extract recipient from message
+  getRecipient(message: GmailMessage): string {
+    const toHeader = message.payload.headers.find(h => h.name === 'To');
+    return toHeader?.value || '';
   }
 }

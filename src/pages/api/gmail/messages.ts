@@ -15,7 +15,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const gmail = new GmailAPI(session.accessToken as string);
 
     if (req.method === 'GET') {
-      const { q, maxResults = '10' } = req.query;
+      const { q, maxResults = '50' } = req.query;
       
       const messages = await gmail.listMessages(
         q as string, 
@@ -24,7 +24,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       
       // Get full message details for each message
       const messageDetails = await Promise.all(
-        (messages.messages || []).slice(0, 5).map(async (msg: any) => {
+        (messages.messages || []).slice(0, 25).map(async (msg: any) => {
           const fullMessage = await gmail.getMessage(msg.id);
           return {
             id: fullMessage.id,
@@ -33,14 +33,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             subject: gmail.getSubject(fullMessage),
             body: gmail.getMessageBody(fullMessage),
             labelIds: fullMessage.labelIds,
-            threadId: fullMessage.threadId
+            threadId: fullMessage.threadId,
+            internalDate: fullMessage.internalDate,
+            to: gmail.getRecipient(fullMessage),
+            payload: fullMessage.payload
           };
         })
       );
 
       res.status(200).json({
         messages: messageDetails,
-        resultSizeEstimate: messages.resultSizeEstimate
+        resultSizeEstimate: messageDetails.length
       });
     } else {
       res.status(405).json({ error: 'Method not allowed' });

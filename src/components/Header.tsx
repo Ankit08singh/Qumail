@@ -1,5 +1,6 @@
 import React from 'react';
 import { Shield } from 'lucide-react';
+import ThemeToggle from './ThemeToggle';
 
 interface HeaderProps {
   onGetStarted: () => void;
@@ -40,13 +41,16 @@ const Header: React.FC<HeaderProps> = ({ onGetStarted }) => {
             </a>
           </nav>
 
-          {/* CTA Button */}
-          <button
-            onClick={onGetStarted}
-            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-2 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg"
-          >
-            Get Started →
-          </button>
+          {/* Theme Toggle and CTA Button */}
+          <div className="flex items-center space-x-4">
+            <ThemeToggle />
+            <button
+              onClick={onGetStarted}
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-2 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg"
+            >
+              Get Started →
+            </button>
+          </div>
         </div>
       </div>
     </header>
