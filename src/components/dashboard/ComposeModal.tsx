@@ -30,6 +30,8 @@ export default function ComposeModal({
 }: ComposeModalProps) {
   if (!isOpen) return null;
 
+  const MAX_BODY_LENGTH = 10000;
+
   const handleInputChange = (field: keyof EmailForm, value: string | EncryptionType) => {
     onFormChange({ ...emailForm, [field]: value });
   };
@@ -95,6 +97,7 @@ export default function ComposeModal({
                 <textarea
                   value={emailForm.body}
                   onChange={(e) => handleInputChange('body', e.target.value)}
+                  maxLength={MAX_BODY_LENGTH}
                   className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 h-64 resize-none"
                   placeholder="Type your message here..."
                   required
@@ -103,8 +106,16 @@ export default function ComposeModal({
 
               {/* Action Buttons */}
               <div className="flex justify-between items-center pt-4 border-t border-gray-700">
-                <div className="text-sm text-gray-400">
-                  Message size: {emailForm.body.length} B
+                <div className="text-sm">
+                  <span className={
+                    emailForm.body.length > MAX_BODY_LENGTH * 0.9
+                      ? "text-red-400 font-semibold"
+                      : emailForm.body.length > MAX_BODY_LENGTH * 0.75
+                      ? "text-yellow-400"
+                      : "text-gray-400"
+                  }>
+                    {emailForm.body.length} / {MAX_BODY_LENGTH} characters
+                  </span>
                 </div>
                 
                 <div className="flex space-x-3">
