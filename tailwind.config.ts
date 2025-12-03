@@ -14,6 +14,9 @@ const config: Config = {
         'pulse-dot': 'pulse-dot 2s infinite',
         'spin-slow': 'spin-slow 3s linear infinite',
         'float': 'float 3s ease-in-out infinite',
+        'quantum-pulse': 'quantum-pulse 4s ease-in-out infinite',
+        'glow': 'glow 2s ease-in-out infinite alternate',
+        'slide-in': 'slide-in 1s ease-out forwards',
       },
       keyframes: {
         'fade-in-up': {
@@ -50,6 +53,34 @@ const config: Config = {
           },
           '50%': {
             transform: 'translateY(-10px)',
+          },
+        },
+        'quantum-pulse': {
+          '0%, 100%': {
+            transform: 'scale(1)',
+            opacity: '0.3',
+          },
+          '50%': {
+            transform: 'scale(1.05)',
+            opacity: '0.6',
+          },
+        },
+        glow: {
+          '0%': {
+            'box-shadow': '0 0 20px rgba(139, 92, 246, 0.5)',
+          },
+          '100%': {
+            'box-shadow': '0 0 40px rgba(139, 92, 246, 0.8), 0 0 60px rgba(59, 130, 246, 0.4)',
+          },
+        },
+        'slide-in': {
+          '0%': {
+            opacity: '0',
+            transform: 'translateX(-30px)',
+          },
+          '100%': {
+            opacity: '1',
+            transform: 'translateX(0)',
           },
         },
       },

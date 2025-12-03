@@ -1,69 +1,101 @@
 import React from 'react';
-import { Shield } from 'lucide-react';
+import { Shield, Mail, Phone, MapPin, Github, Twitter, Linkedin } from 'lucide-react';
 
 const Footer: React.FC = () => {
   return (
-    <footer className="bg-gray-900 text-white py-12">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+    <footer className="relative bg-gradient-to-br from-slate-900 via-purple-900/10 to-slate-900 text-white py-16 sm:py-20 overflow-hidden">
+      {/* Background Effects */}
+      <div className="absolute inset-0">
+        <div className="absolute top-10 right-20 w-64 h-64 bg-purple-600 rounded-full mix-blend-multiply filter blur-xl opacity-5 animate-pulse"></div>
+        <div className="absolute bottom-10 left-20 w-64 h-64 bg-blue-600 rounded-full mix-blend-multiply filter blur-xl opacity-5 animate-pulse animation-delay-4000"></div>
+      </div>
+
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-12">
           {/* Brand */}
-          <div>
-            <div className="flex items-center space-x-2 mb-4">
-              <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-                <Shield className="w-4 h-4 text-white" />
+          <div className="lg:col-span-1">
+            <div className="flex items-center space-x-3 mb-6">
+              <div className="w-10 h-10 bg-gradient-to-r from-purple-600 via-blue-600 to-cyan-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                <Shield className="w-5 h-5 text-white" />
               </div>
-              <span className="text-lg font-bold">Qubits</span>
+              <span className="text-xl font-black bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Qubits</span>
             </div>
-            <p className="text-gray-400 text-sm leading-relaxed">
+            <p className="text-white/60 text-sm leading-relaxed mb-6">
               The world's first quantum-secured email client for ultimate communication security.
             </p>
+            
+            {/* Social Links */}
+            <div className="flex space-x-4">
+              <a href="#" className="w-10 h-10 bg-white/5 backdrop-blur-lg border border-white/10 rounded-lg flex items-center justify-center hover:bg-white/10 hover:border-purple-500/30 transition-all duration-300 group">
+                <Twitter className="w-5 h-5 text-white/70 group-hover:text-white" />
+              </a>
+              <a href="#" className="w-10 h-10 bg-white/5 backdrop-blur-lg border border-white/10 rounded-lg flex items-center justify-center hover:bg-white/10 hover:border-purple-500/30 transition-all duration-300 group">
+                <Github className="w-5 h-5 text-white/70 group-hover:text-white" />
+              </a>
+              <a href="#" className="w-10 h-10 bg-white/5 backdrop-blur-lg border border-white/10 rounded-lg flex items-center justify-center hover:bg-white/10 hover:border-purple-500/30 transition-all duration-300 group">
+                <Linkedin className="w-5 h-5 text-white/70 group-hover:text-white" />
+              </a>
+            </div>
           </div>
           
           {/* Product */}
           <div>
-            <h3 className="font-semibold mb-4">Product</h3>
-            <ul className="space-y-2 text-sm text-gray-400">
-              <li><a href="#features" className="hover:text-white transition-colors">Features</a></li>
-              <li><a href="#security" className="hover:text-white transition-colors">Security</a></li>
-              <li><a href="#pricing" className="hover:text-white transition-colors">Pricing</a></li>
-              <li><a href="#demo" className="hover:text-white transition-colors">Demo</a></li>
+            <h3 className="font-bold text-lg mb-6 text-white">Product</h3>
+            <ul className="space-y-3 text-sm">
+              <li><a href="#features" className="text-white/60 hover:text-blue-400 transition-colors duration-300">Features</a></li>
+              <li><a href="#security" className="text-white/60 hover:text-blue-400 transition-colors duration-300">Security</a></li>
+              <li><a href="#pricing" className="text-white/60 hover:text-blue-400 transition-colors duration-300">Pricing</a></li>
+              <li><a href="#demo" className="text-white/60 hover:text-blue-400 transition-colors duration-300">Demo</a></li>
             </ul>
           </div>
           
           {/* Company */}
           <div>
-            <h3 className="font-semibold mb-4">Company</h3>
-            <ul className="space-y-2 text-sm text-gray-400">
-              <li><a href="#about" className="hover:text-white transition-colors">About</a></li>
-              <li><a href="#contact" className="hover:text-white transition-colors">Contact</a></li>
-              <li><a href="#careers" className="hover:text-white transition-colors">Careers</a></li>
-              <li><a href="#press" className="hover:text-white transition-colors">Press</a></li>
+            <h3 className="font-bold text-lg mb-6 text-white">Company</h3>
+            <ul className="space-y-3 text-sm">
+              <li><a href="#about" className="text-white/60 hover:text-blue-400 transition-colors duration-300">About</a></li>
+              <li><a href="#contact" className="text-white/60 hover:text-blue-400 transition-colors duration-300">Contact</a></li>
+              <li><a href="#careers" className="text-white/60 hover:text-blue-400 transition-colors duration-300">Careers</a></li>
+              <li><a href="#press" className="text-white/60 hover:text-blue-400 transition-colors duration-300">Press</a></li>
             </ul>
           </div>
           
-          {/* Support */}
+          {/* Support & Contact */}
           <div>
-            <h3 className="font-semibold mb-4">Support</h3>
-            <ul className="space-y-2 text-sm text-gray-400">
-              <li><a href="#help" className="hover:text-white transition-colors">Help Center</a></li>
-              <li><a href="#community" className="hover:text-white transition-colors">Community</a></li>
-              <li><a href="#status" className="hover:text-white transition-colors">Status</a></li>
+            <h3 className="font-bold text-lg mb-6 text-white">Support</h3>
+            <ul className="space-y-3 text-sm mb-6">
+              <li><a href="#help" className="text-white/60 hover:text-blue-400 transition-colors duration-300">Help Center</a></li>
+              <li><a href="#community" className="text-white/60 hover:text-blue-400 transition-colors duration-300">Community</a></li>
+              <li><a href="#status" className="text-white/60 hover:text-blue-400 transition-colors duration-300">Status</a></li>
             </ul>
+            
+            {/* Contact Info */}
+            <div className="space-y-2 text-sm text-white/60">
+              <div className="flex items-center space-x-2">
+                <Mail className="w-4 h-4 text-blue-400" />
+                <span>support@qubits.com</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Phone className="w-4 h-4 text-blue-400" />
+                <span>+1 (555) 123-4567</span>
+              </div>
+            </div>
           </div>
         </div>
         
-        <div className="border-t border-gray-800 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
-          <p className="text-gray-400 text-sm">
-            © 2025 Qubits. All rights reserved.
+        {/* Bottom Bar */}
+        <div className="border-t border-white/10 mt-12 pt-8 flex flex-col lg:flex-row justify-between items-center space-y-4 lg:space-y-0">
+          <p className="text-white/40 text-sm">
+            © 2025 Qubits. All rights reserved. Powered by quantum encryption.
           </p>
-          <div className="flex space-x-6 mt-4 md:mt-0">
-            <a href="#privacy" className="text-gray-400 hover:text-white text-sm transition-colors">
+          <div className="flex flex-wrap items-center space-x-6">
+            <a href="#privacy" className="text-white/40 hover:text-blue-400 text-sm transition-colors duration-300">
               Privacy Policy
             </a>
-            <a href="#terms" className="text-gray-400 hover:text-white text-sm transition-colors">
+            <a href="#terms" className="text-white/40 hover:text-blue-400 text-sm transition-colors duration-300">
               Terms of Service
             </a>
-            <a href="#cookies" className="text-gray-400 hover:text-white text-sm transition-colors">
+            <a href="#cookies" className="text-white/40 hover:text-blue-400 text-sm transition-colors duration-300">
               Cookie Policy
             </a>
           </div>
