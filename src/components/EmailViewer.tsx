@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
-import { 
-  ArrowLeft, 
-  Star, 
-  Archive, 
-  Trash2, 
-  MoreHorizontal, 
-  Shield, 
-  CheckCircle, 
+import {
+  ArrowLeft,
+  Star,
+  Archive,
+  Trash2,
+  MoreHorizontal,
+  Shield,
+  CheckCircle,
   Paperclip,
-  Undo, 
-  Download, 
+  Undo,
+  Download,
   ExternalLink,
   Reply,
   ReplyAll,
@@ -28,8 +28,9 @@ interface GmailMessage {
   payload?: {
     headers?: Array<{ name?: string; value?: string }>;
     body?: { data?: string };
-    parts?: Array<{ 
-      body?: { data?: string }; 
+    mimeType?: string;
+    parts?: Array<{
+      body?: { data?: string };
       mimeType?: string;
       filename?: string;
       partId?: string;
@@ -86,10 +87,10 @@ const EmailViewer: React.FC<EmailViewerProps> = ({ email, onBack, onStarEmail, o
 
     try {
       setDecryptLoading(true);
-      
+
       console.log('🔓 Extracting encrypted data...');
       console.log('📝 Body content preview:', email.bodyContent?.substring(0, 200));
-      
+
       // Extract data from email body
       const extractedData = extractEncryptedData(email.bodyContent || '');
       if (!extractedData) {
@@ -99,14 +100,14 @@ const EmailViewer: React.FC<EmailViewerProps> = ({ email, onBack, onStarEmail, o
       console.log('✅ Extracted data successfully');
       console.log('📦 Payload length:', extractedData.encryptedPayload.length);
       console.log('👤 Sender:', email.sender);
-      console.log("encryptedPayload: ",extractedData.encryptedPayload);
-      console.log("metadata: ",extractedData.metadata);
+      console.log("encryptedPayload: ", extractedData.encryptedPayload);
+      console.log("metadata: ", extractedData.metadata);
 
       // Send directly to decrypt endpoint
-      const response = await API.post('/auth/decrypt-email',{
-        encryptedPayload:extractedData.encryptedPayload, 
-        metadata:extractedData.metadata, 
-        senderEmail:email.sender
+      const response = await API.post('/auth/decrypt-email', {
+        encryptedPayload: extractedData.encryptedPayload,
+        metadata: extractedData.metadata,
+        senderEmail: email.sender
       });
 
       if (response && response.data) {
@@ -134,11 +135,11 @@ const EmailViewer: React.FC<EmailViewerProps> = ({ email, onBack, onStarEmail, o
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays === 0) return 'Today';
     if (diffDays === 1) return '1d ago';
     if (diffDays < 30) return `${diffDays}d ago`;
-    
+
     return date.toLocaleDateString();
   };
 
@@ -146,7 +147,7 @@ const EmailViewer: React.FC<EmailViewerProps> = ({ email, onBack, onStarEmail, o
     const date = new Date(parseInt(internalDate));
     return date.toLocaleString('en-US', {
       day: '2-digit',
-      month: '2-digit', 
+      month: '2-digit',
       year: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
@@ -171,22 +172,21 @@ const EmailViewer: React.FC<EmailViewerProps> = ({ email, onBack, onStarEmail, o
           <div className="flex items-center space-x-2">
             {/* Star button - available in all views except trash */}
             {activeView !== 'trash' && (
-              <button 
+              <button
                 onClick={() => onStarEmail(email.id)}
-                className={`p-2 transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 ${
-                  email.labelIds?.includes('STARRED') 
-                    ? 'text-yellow-500 hover:text-yellow-600' 
-                    : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'
-                }`}
+                className={`p-2 transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 ${email.labelIds?.includes('STARRED')
+                  ? 'text-yellow-500 hover:text-yellow-600'
+                  : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'
+                  }`}
                 title={email.labelIds?.includes('STARRED') ? 'Remove star' : 'Add star'}
               >
                 <Star className={`w-5 h-5 ${email.labelIds?.includes('STARRED') ? 'fill-current' : ''}`} />
               </button>
             )}
-            
+
             {/* Archive/Unarchive button */}
             {activeView === 'archive' ? (
-              <button 
+              <button
                 onClick={() => onArchiveEmail(email.id)}
                 className="p-2 text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
                 title="Unarchive"
@@ -194,7 +194,7 @@ const EmailViewer: React.FC<EmailViewerProps> = ({ email, onBack, onStarEmail, o
                 <Undo className="w-5 h-5" />
               </button>
             ) : activeView !== 'trash' && (
-              <button 
+              <button
                 onClick={() => onArchiveEmail(email.id)}
                 className="p-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
                 title="Archive"
@@ -202,10 +202,10 @@ const EmailViewer: React.FC<EmailViewerProps> = ({ email, onBack, onStarEmail, o
                 <Archive className="w-5 h-5" />
               </button>
             )}
-            
+
             {/* Delete/Restore button */}
             {activeView === 'trash' ? (
-              <button 
+              <button
                 onClick={() => onDeleteEmail(email.id)}
                 className="p-2 text-gray-600 hover:text-green-600 dark:text-gray-400 dark:hover:text-green-400 transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
                 title="Restore"
@@ -213,7 +213,7 @@ const EmailViewer: React.FC<EmailViewerProps> = ({ email, onBack, onStarEmail, o
                 <Undo className="w-5 h-5" />
               </button>
             ) : (
-              <button 
+              <button
                 onClick={() => onDeleteEmail(email.id)}
                 className="p-2 text-gray-600 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
                 title="Delete"
@@ -221,7 +221,7 @@ const EmailViewer: React.FC<EmailViewerProps> = ({ email, onBack, onStarEmail, o
                 <Trash2 className="w-5 h-5" />
               </button>
             )}
-            
+
             <button className="p-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
               <MoreHorizontal className="w-5 h-5" />
             </button>
@@ -288,7 +288,7 @@ const EmailViewer: React.FC<EmailViewerProps> = ({ email, onBack, onStarEmail, o
             <div className="text-gray-800 dark:text-gray-300 leading-relaxed text-base break-words overflow-wrap-anywhere">
               {/* Display main email content */}
               {decryptedContent ? (
-                // Show decrypted content
+                // Show decrypted content (always as plain text)
                 <div className="whitespace-pre-wrap">
                   <div className="flex items-center space-x-2 mb-4">
                     <Unlock className="w-5 h-5 text-green-600" />
@@ -297,24 +297,48 @@ const EmailViewer: React.FC<EmailViewerProps> = ({ email, onBack, onStarEmail, o
                   {decryptedContent}
                 </div>
               ) : (
-                <div className={`${email.isEncrypted && emailBodyContent ? 'font-mono text-sm break-all' : 'whitespace-pre-wrap'}`}>
-                  {emailBodyContent || email.snippet || (
-                    <div className="text-gray-600 dark:text-gray-400 italic">
-                      <p>No content available for this email.</p>
-                      <div className="mt-4 p-4 bg-gray-200 dark:bg-gray-700 rounded text-xs">
-                        <strong>Debug Info:</strong>
-                        <br />Body Content: {email.bodyContent ? 'Available' : 'None'}
-                        <br />Body: {email.body ? 'Available' : 'None'}  
-                        <br />Snippet: {email.snippet ? email.snippet : 'None'}
-                        <br />Has Payload: {email.payload ? 'Yes' : 'No'}
-                        {email.payload?.body?.data && <><br />Payload Body Data: Available</>}
-                        {email.payload?.parts && <><br />Payload Parts: {email.payload.parts.length}</>}
-                      </div>
-                    </div>
-                  )}
+                <div className={`${email.isEncrypted && emailBodyContent ? 'font-mono text-sm break-all' : ''}`}>
+                  {(() => {
+                    const content = emailBodyContent || email.snippet || '';
+
+                    // Check if content is HTML - relaxed check
+                    // If it has HTML tags or we determined it was HTML during extraction (by it being assigned to bodyContent when it was from a text/html part)
+                    // we should render it as HTML.
+                    const hasHtmlTags = /<[a-z][\s\S]*>/i.test(content);
+                    const isLikelyHtml = hasHtmlTags || (email.payload?.mimeType === 'text/html');
+
+                    if (isLikelyHtml && !email.isEncrypted) {
+                      // Render HTML content
+                      return (
+                        <div
+                          className="email-content dark:text-gray-300"
+                          dangerouslySetInnerHTML={{ __html: content }}
+                        />
+                      );
+                    } else {
+                      // Render as plain text
+                      return (
+                        <div className="whitespace-pre-wrap">
+                          {content || (
+                            <div className="text-gray-600 dark:text-gray-400 italic">
+                              <p>No content available for this email.</p>
+                              <div className="mt-4 p-4 bg-gray-200 dark:bg-gray-700 rounded text-xs">
+                                <strong>Debug Info:</strong>
+                                <br />Body Content: {email.bodyContent ? 'Available' : 'None'}
+                                <br />Body: {email.body ? 'Available' : 'None'}
+                                <br />Snippet: {email.snippet ? email.snippet : 'None'}
+                                <br />Has Payload: {email.payload ? 'Yes' : 'No'}
+                                {email.payload?.body?.data && <><br />Payload Body Data: Available</>}
+                                {email.payload?.parts && <><br />Payload Parts: {email.payload.parts.length}</>}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    }
+                  })()}
                 </div>
-              )
-              }
+              )}
             </div>
           </div>
 
@@ -344,7 +368,7 @@ const EmailViewer: React.FC<EmailViewerProps> = ({ email, onBack, onStarEmail, o
                   )}
                 </button>
               </div>
-              
+
               {/* Check for encryption metadata */}
               {email.bodyContent.includes('--- ENCRYPTED METADATA ---') && (
                 <div className="mb-3">
