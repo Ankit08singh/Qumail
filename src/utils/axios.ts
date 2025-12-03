@@ -6,6 +6,29 @@ const API = axios.create({
     withCredentials:true,
 });
 
+// Add Authorization header with NextAuth JWT token
+API.interceptors.request.use(async (config) => {
+    try {
+        // Get the JWT token from our custom endpoint
+        const tokenResponse = await fetch('/api/auth/token', {
+            credentials: 'include' // Important: include cookies
+        });
+        
+        if (tokenResponse.ok) {
+            const data = await tokenResponse.json();
+            if (data.token) {
+                config.headers.Authorization = `Bearer ${data.token}`;
+            }
+        }
+    } catch (error) {
+        console.error('Failed to get JWT token:', error);
+    }
+    
+    return config;
+}, (error) => {
+    return Promise.reject(error);
+});
+
 API.interceptors.response.use((response) => {
     return response;
 },(error) => {
