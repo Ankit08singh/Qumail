@@ -64,7 +64,7 @@ export const authOptions = {
   secret: process.env.NEXTAUTH_SECRET,
   callbacks: {
     // Persist tokens in the JWT
-    async jwt({ token, account}) {
+    async jwt({ token, account }: any) {
       // first sign in
       if (account) {
         return {
