@@ -1,7 +1,8 @@
 import { ArrowLeft, X, Save, Send, Loader2 } from "lucide-react";
 import SecurityPanel from "./SecurityPanel";
+import { useState, useEffect } from "react";
 
-type EncryptionType = 'AES' | 'QKD' | 'AES-GCM' | 'AES-Standard' | 'None';
+type EncryptionType = 'AES' | 'QKD' | 'OTP' | 'PQC' | 'None';
 
 interface EmailForm {
   to: string;
@@ -97,6 +98,7 @@ export default function ComposeModal({
                   onChange={(e) => handleInputChange('body', e.target.value)}
                   className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 h-64 resize-none"
                   placeholder="Type your message here..."
+                  maxLength={12000}
                   required
                 />
               </div>
@@ -104,7 +106,7 @@ export default function ComposeModal({
               {/* Action Buttons */}
               <div className="flex justify-between items-center pt-4 border-t border-gray-700">
                 <div className="text-sm text-gray-400">
-                  Message size: {emailForm.body.length} B
+                  Message size: {emailForm.body.length} / 12000 char
                 </div>
                 
                 <div className="flex space-x-3">

@@ -1,6 +1,6 @@
 import { Shield, Lock } from "lucide-react";
 
-type EncryptionType = 'AES' | 'QKD' | 'AES-GCM' | 'AES-Standard' | 'None';
+type EncryptionType = 'AES' | 'QKD' | 'OTP' | 'PQC' | 'None';
 
 interface SecurityPanelProps {
   selectedType: EncryptionType;
@@ -10,7 +10,7 @@ interface SecurityPanelProps {
 export default function SecurityPanel({ selectedType, onTypeChange }: SecurityPanelProps) {
   const securityOptions = [
     {
-      id: 'AES-GCM' as EncryptionType,
+      id: 'OTP' as EncryptionType,
       title: 'Quantum Secure',
       description: 'One-Time Pad encryption using QKD keys for unbreakable security',
       keyRequirement: '1 KB',
@@ -26,7 +26,7 @@ export default function SecurityPanel({ selectedType, onTypeChange }: SecurityPa
       icon: null
     },
     {
-      id: 'AES-Standard' as EncryptionType,
+      id: 'PQC' as EncryptionType,
       title: 'Post-Quantum',
       description: 'Quantum-resistant algorithms for future-proof security',
       keyRequirement: '64 Bytes',

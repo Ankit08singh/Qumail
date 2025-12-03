@@ -26,7 +26,7 @@ export interface GmailMessage {
   displaySubject?: string;
 }
 
-export type EncryptionType = 'AES' | 'QKD' | 'AES-GCM' | 'AES-Standard' | 'None';
+export type EncryptionType = 'AES' | 'QKD' | 'OTP' | 'PQC' | 'None';
 
 export interface EmailForm {
   to: string;
@@ -222,10 +222,10 @@ export function useEmailOperations() {
       } else if (emailForm.type === 'QKD') {
         emailSubject = `🔐 ${emailForm.subject} [Quantum Encrypted]`;
         emailBody = `[QKD ENCRYPTED]\n\n--- ENCRYPTED METADATA ---\nEncryption: Quantum Key Distribution\nQuantum Entanglement ID: QE-${Date.now()}\nKey Distribution Protocol: BB84\nTimestamp: ${new Date().toISOString()}\n--- END METADATA ---\n\n--- ENCRYPTED PAYLOAD ---\n${emailForm.body}\n--- END PAYLOAD ---`;
-      } else if (emailForm.type === 'AES-GCM') {
+      } else if (emailForm.type === 'PQC') {
         emailSubject = `🔐 ${emailForm.subject} [Post-Quantum Encrypted]`;
-        emailBody = `[AES-GCM ENCRYPTED]\n\n--- ENCRYPTED METADATA ---\nEncryption: AES-GCM 32 Bytes\nPost-Quantum Algorithm: Quantum-Resistant\nTimestamp: ${new Date().toISOString()}\n--- END METADATA ---\n\n--- ENCRYPTED PAYLOAD ---\n${emailForm.body}\n--- END PAYLOAD ---`;
-      } else if (emailForm.type === 'AES-Standard') {
+        emailBody = `[PQC ENCRYPTED]\n\n--- ENCRYPTED METADATA ---\nEncryption: AES-GCM 32 Bytes\nPost-Quantum Algorithm: Quantum-Resistant\nTimestamp: ${new Date().toISOString()}\n--- END METADATA ---\n\n--- ENCRYPTED PAYLOAD ---\n${emailForm.body}\n--- END PAYLOAD ---`;
+      } else if (emailForm.type === 'OTP') {
         emailSubject = `🔐 ${emailForm.subject} [AES Standard Encrypted]`;
         emailBody = `[AES STANDARD ENCRYPTED]\n\n--- ENCRYPTED METADATA ---\nEncryption: AES-256 Standard\nAlgorithm: Advanced Encryption Standard\nTimestamp: ${new Date().toISOString()}\n--- END METADATA ---\n\n--- ENCRYPTED PAYLOAD ---\n${emailForm.body}\n--- END PAYLOAD ---`;
       }
