@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect,useRef} from 'react';
+
 import { Shield, Zap, Lock, Globe, ArrowRight, Play } from 'lucide-react';
 
 interface HeroSectionProps {
@@ -12,7 +13,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onTryNow, onLearnMore }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [scrollY, setScrollY] = useState(0);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const animationRef = useRef<number | undefined>();
+  const animationRef = useRef<number | undefined>(undefined);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
