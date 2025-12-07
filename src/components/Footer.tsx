@@ -69,24 +69,13 @@ const Footer: React.FC = () => {
               <li><a href="#status" className="text-white/60 hover:text-blue-400 transition-colors duration-300">Status</a></li>
             </ul>
             
-            {/* Contact Info */}
-            <div className="space-y-2 text-sm text-white/60">
-              <div className="flex items-center space-x-2">
-                <Mail className="w-4 h-4 text-blue-400" />
-                <span>support@qubits.com</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Phone className="w-4 h-4 text-blue-400" />
-                <span>+1 (555) 123-4567</span>
-              </div>
-            </div>
           </div>
         </div>
         
         {/* Bottom Bar */}
         <div className="border-t border-white/10 mt-12 pt-8 flex flex-col lg:flex-row justify-between items-center space-y-4 lg:space-y-0">
           <p className="text-white/40 text-sm">
-            © 2025 Qubits. All rights reserved. Powered by quantum encryption.
+            © 2025 QuMail. All rights reserved. Powered by quantum encryption.
           </p>
           <div className="flex flex-wrap items-center space-x-6">
             <a href="#privacy" className="text-white/40 hover:text-blue-400 text-sm transition-colors duration-300">
