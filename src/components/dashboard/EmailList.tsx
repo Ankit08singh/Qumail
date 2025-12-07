@@ -98,39 +98,39 @@ export default function EmailList({
   };
 
   return (
-    <div className="flex flex-col bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 flex-1 h-full">
+    <div className="flex flex-col bg-white dark:bg-gray-900 lg:border-r border-gray-200 dark:border-gray-700 flex-1 h-full w-full">
       {/* Email List Header */}
-      <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 p-4 flex-shrink-0">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-lg flex items-center justify-center">
-              <Mail className="w-5 h-5 text-gray-700 dark:text-white" />
+      <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 p-3 sm:p-4 flex-shrink-0">
+        <div className="flex items-center justify-between mb-3 sm:mb-4">
+          <div className="flex items-center space-x-2 sm:space-x-3">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gray-200 dark:bg-gray-700 rounded-lg flex items-center justify-center">
+              <Mail className="w-4 h-4 sm:w-5 sm:h-5 text-gray-700 dark:text-white" />
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white capitalize">{activeView}</h2>
-              <p className="text-sm text-gray-500 dark:text-gray-400">{messages.length} emails</p>
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white capitalize">{activeView}</h2>
+              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">{messages.length} emails</p>
             </div>
           </div>
 
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1 sm:space-x-2">
             <button 
               onClick={onRefresh}
-              className={`relative p-2 transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 ${
+              className={`relative p-1.5 sm:p-2 transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 ${
                 hasNewMessages 
                   ? 'text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300' 
                   : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'
               }`}
               title={hasNewMessages ? 'New messages available - Click to refresh' : 'Refresh emails'}
             >
-              <RefreshCw className={`w-5 h-5 ${hasNewMessages ? 'animate-pulse' : ''}`} />
+              <RefreshCw className={`w-4 h-4 sm:w-5 sm:h-5 ${hasNewMessages ? 'animate-pulse' : ''}`} />
               {hasNewMessages && (
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
+                <div className="absolute -top-0.5 -right-0.5 sm:-top-1 sm:-right-1 w-2 h-2 sm:w-3 sm:h-3 bg-blue-500 rounded-full animate-pulse"></div>
               )}
             </button>
-            <button className="p-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
-              <Filter className="w-5 h-5" />
+            <button className="hidden sm:block p-1.5 sm:p-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+              <Filter className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
-            <div className="bg-blue-600 text-white px-3 py-1 rounded-lg text-sm font-medium">
+            <div className="bg-blue-600 text-white px-2 sm:px-3 py-0.5 sm:py-1 rounded-lg text-xs sm:text-sm font-medium">
               {messages.length}
             </div>
           </div>
@@ -138,31 +138,31 @@ export default function EmailList({
 
         {/* New Messages Notification */}
         {hasNewMessages && (
-          <div className="mx-4 mb-4 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg p-3 flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-              <span className="text-sm text-blue-700 dark:text-blue-300 font-medium">
-                New messages are available
+          <div className="mb-3 sm:mb-4 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg p-2 sm:p-3 flex items-center justify-between">
+            <div className="flex items-center space-x-1.5 sm:space-x-2">
+              <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-blue-500 rounded-full animate-pulse"></div>
+              <span className="text-xs sm:text-sm text-blue-700 dark:text-blue-300 font-medium">
+                New messages available
               </span>
             </div>
             <button
               onClick={onRefresh}
-              className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium underline hover:no-underline transition-all"
+              className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 text-xs sm:text-sm font-medium underline hover:no-underline transition-all whitespace-nowrap"
             >
-              Refresh now
+              Refresh
             </button>
           </div>
         )}
 
-        {/* Search Bar */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-400 w-4 h-4" />
+        {/* Search Bar - Mobile only (md+ is in TopHeader) */}
+        <div className="relative md:hidden">
+          <Search className="absolute left-2.5 sm:left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-400 w-3.5 h-3.5 sm:w-4 sm:h-4" />
           <input
             type="text"
             placeholder="Search emails..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg pl-9 pr-4 py-2 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+            className="w-full bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg pl-8 sm:pl-9 pr-3 sm:pr-4 py-1.5 sm:py-2 text-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
       </div>
@@ -191,55 +191,55 @@ export default function EmailList({
             <div
               key={email.id}
               onClick={() => onEmailSelect(email)}
-              className={`border-b border-gray-200 dark:border-gray-700 px-4 py-4 cursor-pointer transition-all duration-200 hover:bg-gray-50 dark:hover:bg-gray-800 group ${
-                selectedEmailId === email.id ? 'bg-gray-100 dark:bg-gray-800 border-l-4 border-l-blue-500' : ''
+              className={`border-b border-gray-200 dark:border-gray-700 px-3 sm:px-4 py-3 sm:py-4 cursor-pointer transition-all duration-200 hover:bg-gray-50 dark:hover:bg-gray-800 group ${
+                selectedEmailId === email.id ? 'bg-gray-100 dark:bg-gray-800 border-l-2 sm:border-l-4 border-l-blue-500' : ''
               }`}
             >
-              <div className="flex items-start space-x-3">
-                {/* Checkbox */}
+              <div className="flex items-start space-x-2 sm:space-x-3">
+                {/* Checkbox - Hidden on mobile */}
                 <input
                   type="checkbox"
-                  className="mt-2 w-4 h-4 text-blue-600 bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500"
+                  className="hidden sm:block mt-2 w-4 h-4 text-blue-600 bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500"
                   onClick={(e) => e.stopPropagation()}
                 />
 
                 {/* Avatar */}
-                <div className={`w-10 h-10 ${getAvatarColor(email.sender || '')} rounded-full flex items-center justify-center text-white font-semibold text-sm flex-shrink-0 mt-1`}>
+                <div className={`w-8 h-8 sm:w-10 sm:h-10 ${getAvatarColor(email.sender || '')} rounded-full flex items-center justify-center text-white font-semibold text-xs sm:text-sm flex-shrink-0 mt-0.5 sm:mt-1`}>
                   {getInitials(email.sender || '')}
                 </div>
 
                 {/* Email Content */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between mb-1">
-                    <div className="flex items-center space-x-2">
-                      <span className="font-medium text-gray-900 dark:text-white truncate">{email.sender}</span>
-                      {email.isEncrypted && <Shield className="w-4 h-4 text-blue-500 dark:text-blue-400" />}
+                <div className="flex-1 min-w-0 overflow-hidden">
+                  <div className="flex items-center justify-between mb-0.5 sm:mb-1">
+                    <div className="flex items-center space-x-1 sm:space-x-2 min-w-0 flex-1">
+                      <span className="font-medium text-sm sm:text-base text-gray-900 dark:text-white truncate">{email.sender}</span>
+                      {email.isEncrypted && <Shield className="w-3 h-3 sm:w-4 sm:h-4 text-blue-500 dark:text-blue-400 flex-shrink-0" />}
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                    <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0 ml-2">
+                      <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
                         {getTimeAgo(email.internalDate || '')}
                       </span>
                     </div>
                   </div>
 
-                  <h3 className="font-semibold text-gray-900 dark:text-white mb-1 truncate">{email.displaySubject}</h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 mb-2">
+                  <h3 className="font-semibold text-sm sm:text-base text-gray-900 dark:text-white mb-0.5 sm:mb-1 truncate">{email.displaySubject}</h3>
+                  <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 line-clamp-1 sm:line-clamp-2 mb-1.5 sm:mb-2">
                     {email.snippet || email.bodyContent?.substring(0, 100)}
                   </p>
 
                   {/* Status Indicators */}
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center space-x-1 sm:space-x-2">
                       {email.isEncrypted && (
-                        <div className="flex items-center space-x-1 bg-green-100/50 dark:bg-green-900/30 border border-green-300 dark:border-green-700 rounded px-2 py-1">
-                          <CheckCircle className="w-3 h-3 text-green-600 dark:text-green-400" />
-                          <span className="text-xs text-green-600 dark:text-green-400 font-medium">Encrypted</span>
+                        <div className="flex items-center space-x-0.5 sm:space-x-1 bg-green-100/50 dark:bg-green-900/30 border border-green-300 dark:border-green-700 rounded px-1.5 sm:px-2 py-0.5 sm:py-1">
+                          <CheckCircle className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-green-600 dark:text-green-400" />
+                          <span className="text-[10px] sm:text-xs text-green-600 dark:text-green-400 font-medium">Encrypted</span>
                         </div>
                       )}
                     </div>
 
                     {/* Actions */}
-                    <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="flex items-center space-x-0.5 sm:space-x-1 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
                       {/* Star button - available in all views except trash */}
                       {activeView !== 'trash' && (
                         <button 
@@ -252,21 +252,21 @@ export default function EmailList({
                           }`}
                           title={email.labelIds?.includes('STARRED') ? 'Remove star' : 'Add star'}
                         >
-                          <Star className={`w-4 h-4 ${email.labelIds?.includes('STARRED') ? 'fill-current' : ''}`} />
+                          <Star className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${email.labelIds?.includes('STARRED') ? 'fill-current' : ''}`} />
                         </button>
                       )}
                       
-                      {/* Archive/Unarchive button */}
+                      {/* Archive/Unarchive button - Hidden on small mobile */}
                       {activeView === 'archive' ? (
                         <button 
                           onClick={(e) => {
                             e.stopPropagation();
                             onArchiveEmail(email.id);
                           }}
-                          className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors text-gray-500 dark:text-gray-400 hover:text-blue-500"
+                          className="hidden sm:block p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors text-gray-500 dark:text-gray-400 hover:text-blue-500"
                           title="Unarchive"
                         >
-                          <Undo className="w-4 h-4" />
+                          <Undo className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                         </button>
                       ) : activeView !== 'trash' && (
                         <button 
@@ -274,10 +274,10 @@ export default function EmailList({
                             e.stopPropagation();
                             onArchiveEmail(email.id);
                           }}
-                          className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors text-gray-500 dark:text-gray-400"
+                          className="hidden sm:block p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors text-gray-500 dark:text-gray-400"
                           title="Archive"
                         >
-                          <Archive className="w-4 h-4" />
+                          <Archive className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                         </button>
                       )}
                       
@@ -291,7 +291,7 @@ export default function EmailList({
                           className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors text-gray-500 dark:text-gray-400 hover:text-green-500"
                           title="Restore"
                         >
-                          <Undo className="w-4 h-4" />
+                          <Undo className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                         </button>
                       ) : (
                         <button 
@@ -302,7 +302,7 @@ export default function EmailList({
                           className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors text-gray-500 dark:text-gray-400 hover:text-red-500"
                           title="Delete"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                         </button>
                       )}
                     </div>

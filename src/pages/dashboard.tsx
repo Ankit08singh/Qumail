@@ -18,6 +18,7 @@ export default function Dashboard() {
   const [selectedEmailId, setSelectedEmailId] = useState<string | null>(null);
   const [selectedEmail, setSelectedEmail] = useState<GmailMessage | null>(null);
   const [showCompose, setShowCompose] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const hasLoadedInitialMessages = useRef(false);
   const activeViewRef = useRef(activeView);
   // Email form state
@@ -239,10 +240,11 @@ export default function Dashboard() {
       <TopHeader 
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
+        onMenuClick={() => setIsSidebarOpen(true)}
       />
 
       {/* Main Layout */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden relative">
         {/* Sidebar */}
         <Sidebar 
           activeView={activeView}
@@ -254,9 +256,11 @@ export default function Dashboard() {
           trashCount={tabCounts.trash}
           draftsCount={tabCounts.drafts}
           onComposeClick={() => setShowCompose(true)}
+          isOpen={isSidebarOpen}
+          onClose={() => setIsSidebarOpen(false)}
         />
 
-        {/* Email List Area */}
+        {/* Email List Area - Full width on mobile */}
         {!selectedEmail && (
           <EmailList 
             activeView={activeView}
@@ -274,9 +278,9 @@ export default function Dashboard() {
           />
         )}
 
-        {/* Email Content Area */}
+        {/* Email Content Area - Full width on mobile */}
         {selectedEmail && (
-          <div className="flex-1 bg-white dark:bg-gray-900">
+          <div className="flex-1 bg-white dark:bg-gray-900 w-full">
             <EmailViewer 
               email={selectedEmail} 
               onBack={() => {
