@@ -111,17 +111,25 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onTryNow, onLearnMore }) => {
       
       {/* Enhanced Animated Quantum Background */}
       <div className="absolute inset-0">
-        {/* Subtle background with parallax */}
+        {/* Main gradient background with parallax */}
         <div 
-          className="absolute inset-0 bg-slate-900"
+          className="absolute inset-0 bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900"
           style={{ transform: `translateY(${scrollY * 0.5}px)` }}
         >
-          <div className="absolute inset-0 opacity-30">
-            {/* Mobile background tint */}
-            <div className="absolute inset-0 md:hidden bg-purple-500/20 animate-pulse"></div>
+          <div className="absolute inset-0 opacity-60">
+            {/* Mobile-optimized background pattern */}
+            <div className="absolute inset-0 md:hidden" style={{ 
+              backgroundImage: `radial-gradient(circle at 30% 30%, rgba(139, 92, 246, 0.12) 1px, transparent 1px), radial-gradient(circle at 70% 70%, rgba(59, 130, 246, 0.12) 1px, transparent 1px)`,
+              backgroundSize: '40px 40px, 60px 60px',
+              animation: 'float 15s ease-in-out infinite'
+            }}></div>
             
-            {/* Desktop background tint */}
-            <div className="absolute inset-0 hidden md:block bg-blue-500/10 animate-pulse"></div>
+            {/* Desktop background pattern */}
+            <div className="absolute inset-0 hidden md:block" style={{ 
+              backgroundImage: `radial-gradient(circle at 25% 25%, rgba(139, 92, 246, 0.15) 2px, transparent 2px), radial-gradient(circle at 75% 75%, rgba(59, 130, 246, 0.15) 2px, transparent 2px)`,
+              backgroundSize: '80px 80px, 120px 120px',
+              animation: 'float 20s ease-in-out infinite'
+            }}></div>
           </div>
         </div>
         
@@ -131,7 +139,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onTryNow, onLearnMore }) => {
             {[...Array(6)].map((_, i) => (
               <div
                 key={`mobile-${i}`}
-                className="absolute w-1 h-1 bg-blue-400 rounded-full animate-pulse"
+                className="absolute w-1 h-1 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full animate-pulse"
                 style={{
                   left: `${Math.random() * 100}%`,
                   top: `${Math.random() * 100}%`,
@@ -151,7 +159,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onTryNow, onLearnMore }) => {
             {[...Array(12)].map((_, i) => (
               <div
                 key={`desktop-${i}`}
-                className="absolute w-2 h-2 bg-purple-400 rounded-full animate-pulse"
+                className="absolute w-2 h-2 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full animate-pulse"
                 style={{
                   left: `${Math.random() * 100}%`,
                   top: `${Math.random() * 100}%`,
@@ -170,11 +178,11 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onTryNow, onLearnMore }) => {
           <div 
             className="absolute w-96 h-96 rounded-full pointer-events-none"
             style={{
-              background: 'radial-gradient(circle, rgba(139, 92, 246, 0.15) 0%, transparent 70%)',
+              background: 'radial-gradient(circle, rgba(4, 41, 86, 0.15) 0%, transparent 70%)',
               left: mousePosition.x - 192,
               top: mousePosition.y - 192,
               transition: 'all 0.2s ease-out',
-              boxShadow: '0 0 60px rgba(139, 92, 246, 0.3)'
+              boxShadow: '0 0 60px rgba(4, 41, 86, 0.3)'
             }}
           />
         )}
@@ -182,9 +190,9 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onTryNow, onLearnMore }) => {
         {/* Enhanced animated quantum rings with rotation */}
         {!isMobile && (
           <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none">
-            <div className="absolute w-96 h-96 border border-purple-500/30 rounded-full animate-spin-slow" style={{ boxShadow: '0 0 20px rgba(139, 92, 246, 0.3)' }}></div>
-            <div className="absolute w-80 h-80 border border-blue-500/30 rounded-full animate-spin-slow" style={{ animationDirection: 'reverse', boxShadow: '0 0 20px rgba(59, 130, 246, 0.3)' }}></div>
-            <div className="absolute w-64 h-64 border border-cyan-500/30 rounded-full animate-spin-slow" style={{ boxShadow: '0 0 20px rgba(6, 182, 212, 0.3)' }}></div>
+            <div className="absolute w-96 h-96 border border-[#042956]/30 rounded-full animate-spin-slow" style={{ boxShadow: '0 0 20px rgba(4, 41, 86, 0.3)' }}></div>
+            <div className="absolute w-80 h-80 border border-[#EC710A]/30 rounded-full animate-spin-slow" style={{ animationDirection: 'reverse', boxShadow: '0 0 20px rgba(236, 113, 10, 0.3)' }}></div>
+            <div className="absolute w-64 h-64 border border-[#EC710A]/20 rounded-full animate-spin-slow" style={{ boxShadow: '0 0 20px rgba(236, 113, 10, 0.2)' }}></div>
           </div>
         )}
       </div>
@@ -193,11 +201,11 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onTryNow, onLearnMore }) => {
       <div className="relative z-10 text-center px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         {/* Mobile-optimized floating feature cards */}
         <div className="absolute top-0 left-0 w-full h-full pointer-events-none md:hidden">
-          <div className="absolute top-8 left-4 w-12 h-12 bg-purple-600/20 backdrop-blur-lg border border-purple-500/30 rounded-xl flex items-center justify-center animate-float" style={{ animationDelay: '0s' }}>
-            <Shield className="w-5 h-5 text-purple-400" />
+          <div className="absolute top-8 left-4 w-12 h-12 bg-[#042956]/20 backdrop-blur-lg border border-[#042956]/30 rounded-xl flex items-center justify-center animate-float" style={{ animationDelay: '0s' }}>
+            <Shield className="w-5 h-5 text-[#042956]" />
           </div>
-          <div className="absolute top-8 right-4 w-12 h-12 bg-blue-600/20 backdrop-blur-lg border border-blue-500/30 rounded-xl flex items-center justify-center animate-float" style={{ animationDelay: '1s' }}>
-            <Zap className="w-5 h-5 text-blue-400" />
+          <div className="absolute top-8 right-4 w-12 h-12 bg-[#EC710A]/20 backdrop-blur-lg border border-[#EC710A]/30 rounded-xl flex items-center justify-center animate-float" style={{ animationDelay: '1s' }}>
+            <Zap className="w-5 h-5 text-[#EC710A]" />
           </div>
           <div className="absolute bottom-32 left-4 w-12 h-12 bg-cyan-600/20 backdrop-blur-lg border border-cyan-500/30 rounded-xl flex items-center justify-center animate-float" style={{ animationDelay: '2s' }}>
             <Lock className="w-5 h-5 text-cyan-400" />
@@ -206,11 +214,11 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onTryNow, onLearnMore }) => {
 
         {/* Desktop floating feature cards */}
         <div className="absolute top-0 left-0 w-full h-full pointer-events-none hidden md:block">
-          <div className="absolute top-10 left-10 w-20 h-20 bg-purple-600/20 backdrop-blur-lg border border-purple-500/30 rounded-2xl flex items-center justify-center animate-float" style={{ animationDelay: '0s' }}>
-            <Shield className="w-8 h-8 text-purple-400" />
+          <div className="absolute top-10 left-10 w-20 h-20 bg-[#042956]/20 backdrop-blur-lg border border-[#042956]/30 rounded-2xl flex items-center justify-center animate-float" style={{ animationDelay: '0s' }}>
+            <Shield className="w-8 h-8 text-[#042956]" />
           </div>
-          <div className="absolute top-10 right-10 w-20 h-20 bg-blue-600/20 backdrop-blur-lg border border-blue-500/30 rounded-2xl flex items-center justify-center animate-float" style={{ animationDelay: '1s' }}>
-            <Zap className="w-8 h-8 text-blue-400" />
+          <div className="absolute top-10 right-10 w-20 h-20 bg-[#EC710A]/20 backdrop-blur-lg border border-[#EC710A]/30 rounded-2xl flex items-center justify-center animate-float" style={{ animationDelay: '1s' }}>
+            <Zap className="w-8 h-8 text-[#EC710A]" />
           </div>
           <div className="absolute bottom-20 left-20 w-20 h-20 bg-cyan-600/20 backdrop-blur-lg border border-cyan-500/30 rounded-2xl flex items-center justify-center animate-float" style={{ animationDelay: '2s' }}>
             <Lock className="w-8 h-8 text-cyan-400" />
@@ -222,7 +230,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onTryNow, onLearnMore }) => {
           <span className="block mb-1 sm:mb-2 md:mb-4 text-white drop-shadow-2xl">
             Quantum
           </span>
-          <span className="block text-blue-400 drop-shadow-2xl">
+          <span className="block text-[#EC710A] drop-shadow-2xl">
             Encrypted
           </span>
           <span className="block text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl mt-2 sm:mt-4 md:mt-6 text-white/80 font-light">
@@ -233,7 +241,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onTryNow, onLearnMore }) => {
         {/* Enhanced description with better mobile spacing */}
         <p className="text-sm sm:text-base md:text-lg lg:text-xl text-white/70 leading-relaxed mb-8 sm:mb-12 md:mb-16 max-w-3xl md:max-w-4xl mx-auto animate-fade-in-up px-4" style={{ animationDelay: '0.4s' }}>
           Harness the power of quantum mechanics for unhackable encryption. 
-          <span className="block mt-1 sm:mt-2 md:mt-3 text-lg sm:text-xl md:text-2xl lg:text-4xl text-blue-400 font-bold">
+          <span className="block mt-1 sm:mt-2 md:mt-3 text-lg sm:text-xl md:text-2xl lg:text-4xl text-[#EC710A] font-bold">
             Protect your data with quantum key distribution.
           </span>
         </p>
@@ -244,7 +252,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onTryNow, onLearnMore }) => {
             onClick={onTryNow}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
-            className="group relative overflow-hidden rounded-xl bg-blue-600 hover:bg-blue-500 px-8 py-4 text-base sm:text-lg font-bold text-white transition-all duration-300 hover:shadow-xl hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-auto"
+            className="group relative overflow-hidden rounded-xl bg-[#EC710A] hover:bg-[#042956] px-8 py-4 text-base sm:text-lg font-bold text-white transition-all duration-300 hover:shadow-xl hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-[#EC710A] w-full sm:w-auto"
           >
             <span className="relative z-10 flex items-center justify-center gap-2 sm:gap-3">
               <ArrowRight className="w-5 h-5" />

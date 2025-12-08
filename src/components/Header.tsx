@@ -23,11 +23,14 @@ const Header: React.FC<HeaderProps> = ({ onGetStarted }) => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
   return (
-    <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${isScrolled ? 'bg-slate-900/98 backdrop-blur-2xl border-b border-purple-500/20 shadow-2xl shadow-purple-500/10' : 'bg-slate-900/90 backdrop-blur-xl border-b border-slate-700/30'}`}>
+    <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${isScrolled ? 'bg-slate-950/98 backdrop-blur-2xl border-b border-purple-500/20 shadow-2xl shadow-purple-500/10' : 'bg-slate-950/90 backdrop-blur-xl border-b border-slate-800/30'}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-4">
           {/* Enhanced Logo */}
-          <Logo className="h-8 sm:h-10 w-auto" priority />
+          <div className="flex items-center space-x-2 sm:space-x-3">
+            <Logo className="h-8 sm:h-10 w-auto" priority />
+            <span className="text-lg sm:text-xl font-semibold text-white">QuMail</span>
+          </div>
 
           {/* Enhanced Navigation */}
           <nav className="hidden md:flex items-center space-x-2">
@@ -71,7 +74,7 @@ const Header: React.FC<HeaderProps> = ({ onGetStarted }) => {
             </div>
             <button
               onClick={onGetStarted}
-              className="group relative overflow-hidden bg-blue-600 hover:bg-blue-500 text-white px-4 lg:px-8 py-2.5 lg:py-3 rounded-xl lg:rounded-2xl font-bold text-xs lg:text-sm uppercase tracking-wider transition-all duration-300 hover:shadow-xl"
+              className="group relative overflow-hidden bg-[#EC710A] hover:bg-[#042956] text-white px-4 lg:px-8 py-2.5 lg:py-3 rounded-xl lg:rounded-2xl font-bold text-xs lg:text-sm uppercase tracking-wider transition-all duration-300 hover:shadow-xl"
             >
               <span className="relative z-10 flex items-center gap-1.5 lg:gap-2">
                 Launch Portal
@@ -112,7 +115,7 @@ const Header: React.FC<HeaderProps> = ({ onGetStarted }) => {
                 </div>
                 <button
                   onClick={onGetStarted}
-                  className="flex-1 group relative overflow-hidden bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-xl font-bold text-xs sm:text-sm uppercase tracking-wider transition-all duration-300 hover:shadow-lg"
+                  className="flex-1 group relative overflow-hidden bg-[#EC710A] hover:bg-[#042956] text-white px-6 py-3 rounded-xl font-bold text-xs sm:text-sm uppercase tracking-wider transition-all duration-300 hover:shadow-lg"
                 >
                   <span className="relative z-10 flex items-center justify-center gap-2">
                     Launch Portal
