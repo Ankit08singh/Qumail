@@ -88,7 +88,7 @@ export default function Sidebar({
             onComposeClick();
             onClose?.();
           }}
-          className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-semibold py-2.5 sm:py-3 px-3 sm:px-4 rounded-xl flex items-center justify-center space-x-2 transition-all duration-200 transform hover:scale-105 text-sm sm:text-base"
+          className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2.5 sm:py-3 px-3 sm:px-4 rounded-xl flex items-center justify-center space-x-2 transition-all duration-200 transform hover:scale-105 text-sm sm:text-base"
         >
           <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
           <span>Compose</span>

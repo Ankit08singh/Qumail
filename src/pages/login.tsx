@@ -2,7 +2,8 @@ import { signIn, getSession } from "next-auth/react";
 import { GetServerSideProps } from "next";
 import Link from "next/link";
 import { useState } from "react";
-import { Shield, ArrowLeft, Lock, ChevronLeft } from "lucide-react";
+import { ArrowLeft, Lock, ChevronLeft } from "lucide-react";
+import Image from "next/image";
 
 export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
@@ -27,17 +28,24 @@ export default function Login() {
         <div className="absolute -bottom-8 left-40 w-96 h-96 bg-indigo-600 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-pulse animation-delay-4000"></div>
       </div>
 
-      <div className="relative z-10 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="flex justify-center items-center space-x-4">
+      <div className="relative z-10 sm:mx-auto sm:w-full sm:max-w-md px-4">
+        <div className="flex justify-center items-center space-x-2 sm:space-x-4">
           <Link href="/" className="inline-flex items-center text-gray-400 hover:text-blue-400 transition-colors duration-200">
             <ChevronLeft className="w-5 h-5" />
           </Link>
           
           <Link href="/" className="flex items-center space-x-3 group">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 border border-blue-400/30">
-              <Shield className="w-7 h-7 text-white" />
-            </div>
-            <h1 className="text-3xl font-bold text-white group-hover:text-blue-200 transition-colors duration-300">QuMail</h1>
+            <Image
+              src="/logo.png"
+              alt="QuMail"
+              width={140}
+              height={40}
+              className="h-12 w-auto"
+              priority
+            />
+            <span className="text-3xl font-bold text-white group-hover:text-blue-200 transition-colors duration-300">
+              QuMail
+            </span>
           </Link>
         </div>
         
@@ -51,15 +59,15 @@ export default function Login() {
         </div>
       </div>
 
-      <div className="mt-12 sm:mx-auto sm:w-full sm:max-w-md relative z-10">
-        <div className="bg-gray-900/50 backdrop-blur-md border border-gray-700/50 rounded-3xl py-10 px-8 shadow-2xl">
+      <div className="mt-8 sm:mt-12 sm:mx-auto sm:w-full sm:max-w-md relative z-10 px-4">
+        <div className="bg-gray-900/50 backdrop-blur-md border border-gray-700/50 rounded-2xl sm:rounded-3xl py-8 sm:py-10 px-6 sm:px-8 shadow-2xl">
           <div className="space-y-8">
             {/* Welcome Message */}
             <div className="text-center">
-              <div className="w-20 h-20 bg-gradient-to-br from-blue-500/20 to-purple-600/20 backdrop-blur-sm border border-blue-400/30 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                <Lock className="w-10 h-10 text-blue-400" />
+              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-blue-500/20 backdrop-blur-sm border border-blue-400/30 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6">
+                <Lock className="w-8 h-8 sm:w-10 sm:h-10 text-blue-400" />
               </div>
-              <p className="text-gray-300 text-lg leading-relaxed">
+              <p className="text-gray-300 text-sm sm:text-base lg:text-lg leading-relaxed">
                 Access your quantum-secured communication platform with enterprise-grade authentication.
               </p>
             </div>
@@ -69,7 +77,7 @@ export default function Login() {
               <button
                 onClick={handleGoogleSignIn}
                 disabled={isLoading}
-                className="group relative w-full flex justify-center py-4 px-6 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 rounded-2xl shadow-xl hover:shadow-2xl focus:outline-none focus:ring-4 focus:ring-blue-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 border border-blue-400/30"
+                className="group relative w-full flex justify-center py-3 sm:py-4 px-6 bg-blue-600 hover:bg-blue-500 rounded-xl sm:rounded-2xl shadow-xl hover:shadow-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 border border-blue-400/30"
               >
                 <div className="relative flex items-center">
                   {isLoading ? (

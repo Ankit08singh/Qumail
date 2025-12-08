@@ -9,6 +9,11 @@ const config: Config = {
   darkMode: 'class',
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['var(--font-body)', 'DM Sans', 'Google Sans', 'Segoe UI', 'Helvetica Neue', 'Arial', 'sans-serif'],
+        heading: ['var(--font-heading)', 'Space Grotesk', 'DM Sans', 'Segoe UI', 'Helvetica Neue', 'Arial', 'sans-serif'],
+        mono: ['var(--font-mono)', 'Space Mono', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', 'monospace'],
+      },
       animation: {
         'fade-in-up': 'fade-in-up 0.8s ease-out forwards',
         'pulse-dot': 'pulse-dot 2s infinite',

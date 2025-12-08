@@ -47,7 +47,8 @@ export default function Dashboard() {
     smartRefresh,
     checkForNewMessages,
     hasNewMessages,
-    lastCheckTime
+    lastCheckTime,
+    error
   } = useEmailOperations();
 
   // Update activeView ref when it changes
@@ -275,6 +276,7 @@ export default function Dashboard() {
             onArchiveEmail={activeView === 'archive' ? unarchiveEmail : archiveEmail}
             onDeleteEmail={activeView === 'trash' ? restoreEmail : deleteEmail}
             hasNewMessages={hasNewMessages}
+            error={error}
           />
         )}
 

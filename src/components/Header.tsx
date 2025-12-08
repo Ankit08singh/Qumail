@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Shield, Menu, X, Zap, Lock, Globe } from 'lucide-react';
+import { Menu, X, Zap, Lock, Globe } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
+import Logo from './Logo';
 
 interface HeaderProps {
   onGetStarted: () => void;
@@ -26,18 +27,7 @@ const Header: React.FC<HeaderProps> = ({ onGetStarted }) => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-4">
           {/* Enhanced Logo */}
-          <div className="flex items-center space-x-3 group">
-            <div className="relative w-12 h-12 bg-gradient-to-r from-purple-600 via-blue-600 to-cyan-600 rounded-xl flex items-center justify-center transform transition-all duration-500 group-hover:scale-110 group-hover:rotate-3 shadow-lg shadow-purple-500/25">
-              <div className="absolute inset-0 bg-gradient-to-r from-purple-600 via-blue-600 to-cyan-600 rounded-xl blur-xl opacity-50 group-hover:opacity-70 transition-opacity"></div>
-              <Shield className="w-6 h-6 text-white relative z-10" />
-            </div>
-            <div className="group">
-              <h1 className="text-2xl font-black bg-gradient-to-r from-white via-purple-200 to-cyan-200 bg-clip-text text-transparent group-hover:from-purple-300 group-hover:to-cyan-300 transition-all duration-300">
-                Qumail
-              </h1>
-              <p className="text-xs text-purple-400/80 font-medium tracking-wider uppercase">Quantum Secured</p>
-            </div>
-          </div>
+          <Logo className="h-8 sm:h-10 w-auto" priority />
 
           {/* Enhanced Navigation */}
           <nav className="hidden md:flex items-center space-x-2">
@@ -58,7 +48,6 @@ const Header: React.FC<HeaderProps> = ({ onGetStarted }) => {
                   {item.icon && <item.icon className="w-4 h-4 opacity-70 group-hover:opacity-100 transition-opacity" />}
                   {item.label}
                 </span>
-                <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-cyan-500/20 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm"></div>
               </a>
             ))}
           </nav>
@@ -68,7 +57,6 @@ const Header: React.FC<HeaderProps> = ({ onGetStarted }) => {
             onClick={toggleMobileMenu}
             className="md:hidden relative group flex items-center justify-center w-12 h-12 text-white hover:bg-white/10 rounded-xl transition-all duration-300 transform hover:scale-110"
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-cyan-500/20 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-md"></div>
             {isMobileMenuOpen ? (
               <X className="w-6 h-6 relative z-10 transition-transform duration-300 rotate-90" />
             ) : (
@@ -77,20 +65,18 @@ const Header: React.FC<HeaderProps> = ({ onGetStarted }) => {
           </button>
 
           {/* Enhanced Theme Toggle and CTA Button - Desktop */}
-          <div className="hidden md:flex items-center space-x-3">
+          <div className="hidden md:flex items-center space-x-2 lg:space-x-3">
             <div className="p-1 rounded-xl bg-white/5 backdrop-blur-sm border border-white/10">
               <ThemeToggle />
             </div>
             <button
               onClick={onGetStarted}
-              className="group relative overflow-hidden bg-gradient-to-r from-purple-600 via-blue-600 to-cyan-600 hover:from-purple-700 hover:via-blue-700 hover:to-cyan-700 text-white px-8 py-3 rounded-2xl font-bold text-sm uppercase tracking-wider transition-all duration-500 transform hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/40"
+              className="group relative overflow-hidden bg-blue-600 hover:bg-blue-500 text-white px-4 lg:px-8 py-2.5 lg:py-3 rounded-xl lg:rounded-2xl font-bold text-xs lg:text-sm uppercase tracking-wider transition-all duration-300 hover:shadow-xl"
             >
-              <span className="relative z-10 flex items-center gap-2">
+              <span className="relative z-10 flex items-center gap-1.5 lg:gap-2">
                 Launch Portal
-                <Zap className="w-4 h-4 group-hover:animate-pulse" />
+                <Zap className="w-3.5 h-3.5 lg:w-4 lg:h-4 group-hover:animate-pulse" />
               </span>
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-              <div className="absolute inset-0 bg-gradient-to-t from-transparent via-purple-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
             </button>
           </div>
         </div>
@@ -113,7 +99,7 @@ const Header: React.FC<HeaderProps> = ({ onGetStarted }) => {
                   style={{ animationDelay: `${index * 0.05}s` }}
                 >
                   {item.icon && (
-                    <div className="w-8 h-8 bg-gradient-to-r from-purple-500/20 to-cyan-500/20 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
                       <item.icon className="w-4 h-4" />
                     </div>
                   )}
@@ -126,13 +112,12 @@ const Header: React.FC<HeaderProps> = ({ onGetStarted }) => {
                 </div>
                 <button
                   onClick={onGetStarted}
-                  className="flex-1 group relative overflow-hidden bg-gradient-to-r from-purple-600 via-blue-600 to-cyan-600 hover:from-purple-700 hover:via-blue-700 hover:to-cyan-700 text-white px-6 py-3 rounded-xl font-bold text-sm uppercase tracking-wider transition-all duration-500 transform hover:scale-105 hover:shadow-lg hover:shadow-purple-500/40"
+                  className="flex-1 group relative overflow-hidden bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-xl font-bold text-xs sm:text-sm uppercase tracking-wider transition-all duration-300 hover:shadow-lg"
                 >
                   <span className="relative z-10 flex items-center justify-center gap-2">
                     Launch Portal
                     <Zap className="w-4 h-4 group-hover:animate-pulse" />
                   </span>
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
                 </button>
               </div>
             </nav>

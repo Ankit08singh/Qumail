@@ -3,7 +3,7 @@ import { Shield, Mail, Phone, MapPin, Github, Twitter, Linkedin } from 'lucide-r
 
 const Footer: React.FC = () => {
   return (
-    <footer className="relative bg-gradient-to-br from-slate-900 via-purple-900/10 to-slate-900 text-white py-16 sm:py-20 overflow-hidden">
+    <footer className="relative bg-slate-950 text-white py-16 sm:py-20 overflow-hidden border-t border-slate-800">
       {/* Background Effects */}
       <div className="absolute inset-0">
         <div className="absolute top-10 right-20 w-64 h-64 bg-purple-600 rounded-full mix-blend-multiply filter blur-xl opacity-5 animate-pulse"></div>
@@ -15,10 +15,10 @@ const Footer: React.FC = () => {
           {/* Brand */}
           <div className="lg:col-span-1">
             <div className="flex items-center space-x-3 mb-6">
-              <div className="w-10 h-10 bg-gradient-to-r from-purple-600 via-blue-600 to-cyan-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+              <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform">
                 <Shield className="w-5 h-5 text-white" />
               </div>
-              <span className="text-xl font-black bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Qubits</span>
+              <span className="text-xl font-black text-blue-400">Qubits</span>
             </div>
             <p className="text-white/60 text-sm leading-relaxed mb-6">
               The world's first quantum-secured email client for ultimate communication security.
@@ -26,13 +26,13 @@ const Footer: React.FC = () => {
             
             {/* Social Links */}
             <div className="flex space-x-4">
-              <a href="#" className="w-10 h-10 bg-white/5 backdrop-blur-lg border border-white/10 rounded-lg flex items-center justify-center hover:bg-white/10 hover:border-purple-500/30 transition-all duration-300 group">
+              <a href="#" className="w-10 h-10 bg-white/5 backdrop-blur-lg border border-white/10 rounded-lg flex items-center justify-center hover:bg-white/10 hover:border-blue-500/40 transition-all duration-300 group">
                 <Twitter className="w-5 h-5 text-white/70 group-hover:text-white" />
               </a>
-              <a href="#" className="w-10 h-10 bg-white/5 backdrop-blur-lg border border-white/10 rounded-lg flex items-center justify-center hover:bg-white/10 hover:border-purple-500/30 transition-all duration-300 group">
+              <a href="#" className="w-10 h-10 bg-white/5 backdrop-blur-lg border border-white/10 rounded-lg flex items-center justify-center hover:bg-white/10 hover:border-blue-500/40 transition-all duration-300 group">
                 <Github className="w-5 h-5 text-white/70 group-hover:text-white" />
               </a>
-              <a href="#" className="w-10 h-10 bg-white/5 backdrop-blur-lg border border-white/10 rounded-lg flex items-center justify-center hover:bg-white/10 hover:border-purple-500/30 transition-all duration-300 group">
+              <a href="#" className="w-10 h-10 bg-white/5 backdrop-blur-lg border border-white/10 rounded-lg flex items-center justify-center hover:bg-white/10 hover:border-blue-500/40 transition-all duration-300 group">
                 <Linkedin className="w-5 h-5 text-white/70 group-hover:text-white" />
               </a>
             </div>

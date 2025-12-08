@@ -48,7 +48,7 @@ const SecurityLevelsSection: React.FC = () => {
   ];
 
   return (
-    <section id="security" className="relative py-20 sm:py-32 bg-gradient-to-br from-slate-900 via-purple-900/10 to-slate-900 overflow-hidden">
+    <section id="security" className="relative py-20 sm:py-32 bg-slate-900 overflow-hidden">
       {/* Background Effects */}
       <div className="absolute inset-0">
         <div className="absolute top-32 right-10 w-72 h-72 bg-purple-600 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-pulse"></div>
@@ -58,17 +58,17 @@ const SecurityLevelsSection: React.FC = () => {
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="text-center mb-16 sm:mb-20">
-          <div className="inline-flex items-center space-x-2 bg-gradient-to-r from-purple-500/10 to-blue-500/10 backdrop-blur-lg border border-purple-500/30 rounded-full px-4 py-2 mb-6">
+          <div className="inline-flex items-center space-x-2 bg-purple-500/10 backdrop-blur-lg border border-purple-500/30 rounded-full px-4 py-2 mb-6">
             <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse"></div>
             <span className="text-sm text-white/90 font-medium">SECURITY LEVELS</span>
           </div>
           
           <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black mb-6">
-            <span className="bg-gradient-to-r from-white via-gray-200 to-white bg-clip-text text-transparent">
+            <span className="text-white">
               Choose Your
             </span>
             <br />
-            <span className="bg-gradient-to-r from-purple-400 via-blue-400 to-cyan-400 bg-clip-text text-transparent">
+            <span className="text-purple-400">
               Security Level
             </span>
           </h2>
@@ -78,7 +78,7 @@ const SecurityLevelsSection: React.FC = () => {
           </p>
         </div>
         {/* Security Levels Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 px-4 sm:px-0">
           {securityLevels.map((level) => {
             const IconComponent = level.icon;
             const isSelected = selectedLevel === level.id;
@@ -86,7 +86,7 @@ const SecurityLevelsSection: React.FC = () => {
             return (
               <div
                 key={level.id}
-                className={`group relative bg-gradient-to-br from-white/5 to-white/[0.02] backdrop-blur-xl border ${isSelected ? 'border-purple-500/50' : 'border-white/10'} rounded-2xl p-6 sm:p-8 hover:border-purple-500/30 transition-all duration-500 hover:shadow-2xl hover:shadow-purple-500/20 hover:-translate-y-2 cursor-pointer`}
+                className={`group relative bg-white/5 backdrop-blur-xl border ${isSelected ? 'border-purple-500/50' : 'border-white/10'} rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 hover:border-purple-500/40 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 cursor-pointer`}
                 onClick={() => setSelectedLevel(level.id)}
               >
                 {/* Selection Indicator */}
@@ -101,7 +101,7 @@ const SecurityLevelsSection: React.FC = () => {
                 )}
                 
                 {/* Icon Container */}
-                <div className={`w-16 h-16 bg-gradient-to-r ${level.color} rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 group-hover:rotate-3`}>
+                <div className={`w-16 h-16 ${level.id === 'quantum-secure' ? 'bg-red-600' : level.id === 'quantum-aided' ? 'bg-blue-600' : level.id === 'post-quantum' ? 'bg-green-600' : 'bg-gray-600'} rounded-2xl flex items-center justify-center mb-6 group-hover:scale-105 transition-transform duration-300`}>
                   <IconComponent className="w-8 h-8 text-white" />
                 </div>
                 

@@ -158,23 +158,24 @@ const EmailViewer: React.FC<EmailViewerProps> = ({ email, onBack, onStarEmail, o
   return (
     <div className="flex-1 bg-white dark:bg-gray-900 flex flex-col h-full">
       {/* Top Header with Back Button and Subject */}
-      <div className="border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex-shrink-0">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <button
-              onClick={onBack}
-              className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5" />
-              <span className="text-sm font-medium">Back to emails</span>
-            </button>
-          </div>
-          <div className="flex items-center space-x-2">
-            {/* Star button - available in all views except trash */}
-            {activeView !== 'trash' && (
+      <div className="border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+        <div className="max-w-5xl mx-auto px-3 sm:px-6 py-3 sm:py-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center space-x-2 sm:space-x-3">
               <button
-                onClick={() => onStarEmail(email.id)}
-                className={`p-2 transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 ${email.labelIds?.includes('STARRED')
+                onClick={onBack}
+                className="flex items-center space-x-2 text-xs sm:text-sm font-medium text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors"
+              >
+                <ArrowLeft className="w-5 h-5" />
+                <span>Back to emails</span>
+              </button>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              {/* Star button - available in all views except trash */}
+              {activeView !== 'trash' && (
+                <button
+                  onClick={() => onStarEmail(email.id)}
+                  className={`p-2 transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 ${email.labelIds?.includes('STARRED')
                   ? 'text-yellow-500 hover:text-yellow-600'
                   : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'
                   }`}
@@ -226,183 +227,193 @@ const EmailViewer: React.FC<EmailViewerProps> = ({ email, onBack, onStarEmail, o
               <MoreHorizontal className="w-5 h-5" />
             </button>
           </div>
-        </div>
+          </div>
 
-        {/* Subject and Encryption Badges */}
-        <div className="mt-3 sm:mt-4 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-4">
-          <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 dark:text-white break-words leading-tight">{email.subject}</h1>
-          <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
-            {email.isEncrypted && (
-              <>
-                <div className="bg-red-600 text-white px-2 sm:px-3 py-0.5 sm:py-1 rounded-md text-[10px] sm:text-xs font-bold">
-                  SECURE
-                </div>
-                <div className="bg-green-600 text-white px-2 sm:px-3 py-0.5 sm:py-1 rounded-md text-[10px] sm:text-xs font-bold">
-                  ENCRYPTED
-                </div>
-              </>
+          {/* Subject and Encryption Badges */}
+          <div className="mt-3 sm:mt-4 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-4">
+            <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 dark:text-white break-words leading-tight">
+              {email.subject}
+            </h1>
+            <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
+              {email.isEncrypted && (
+                <>
+                  <div className="bg-red-600 text-white px-2 sm:px-3 py-0.5 sm:py-1 rounded-md text-[10px] sm:text-xs font-bold">
+                    SECURE
+                  </div>
+                  <div className="bg-green-600 text-white px-2 sm:px-3 py-0.5 sm:py-1 rounded-md text-[10px] sm:text-xs font-bold">
+                    ENCRYPTED
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* From/To/Time Information */}
+          <div className="mt-3 sm:mt-4 space-y-2 sm:space-y-3 text-xs sm:text-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+              <div className="min-w-0 flex-1">
+                <span className="text-gray-500 dark:text-gray-400">From: </span>
+                <span className="text-gray-900 dark:text-white font-medium break-all">{email.sender || 'Unknown sender'}</span>
+              </div>
+              <div className="flex items-center space-x-1 sm:space-x-2 text-gray-500 dark:text-gray-400 flex-shrink-0">
+                <span>📅</span>
+                <span className="text-gray-900 dark:text-white font-medium text-xs sm:text-sm">
+                  {email.internalDate ? formatDateTime(email.internalDate) : 'Date not available'}
+                </span>
+              </div>
+            </div>
+            <div className="min-w-0">
+              <span className="text-gray-500 dark:text-gray-400">To: </span>
+              <span className="text-gray-900 dark:text-white font-medium break-all">{email.to || 'Unknown recipient'}</span>
+            </div>
+          </div>
+
+
+          {/* Action Buttons */}
+          <div className="mt-3 sm:mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+              <button className="bg-blue-600 hover:bg-blue-500 text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg flex items-center justify-center space-x-1 sm:space-x-2 transition-colors text-sm w-full sm:w-auto">
+                <Reply className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span>Reply</span>
+              </button>
+              <button className="border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg flex items-center justify-center space-x-1 sm:space-x-2 transition-colors text-sm w-full sm:w-auto">
+                <ReplyAll className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">Reply All</span>
+                <span className="sm:hidden">All</span>
+              </button>
+              <button className="border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg flex items-center justify-center space-x-1 sm:space-x-2 transition-colors text-sm w-full sm:w-auto">
+                <Forward className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">Forward</span>
+                <span className="sm:hidden">Fwd</span>
+              </button>
+            </div>
+
+            {email.isEncrypted && !decryptedContent && (
+              <button
+                onClick={decryptEmail}
+                disabled={decryptLoading}
+                className="flex items-center justify-center px-3 sm:px-4 py-2 bg-purple-600 hover:bg-purple-500 disabled:bg-purple-400 text-white rounded-lg transition-colors w-full sm:w-auto"
+                aria-label={decryptLoading ? 'Decrypting message' : 'Decrypt message'}
+                title={decryptLoading ? 'Decrypting message' : 'Decrypt message'}
+              >
+                {decryptLoading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Lock className="w-4 h-4" />
+                )}
+                <span className="sr-only">Decrypt message</span>
+              </button>
             )}
           </div>
-        </div>
-
-        {/* From/To/Time Information */}
-        <div className="mt-3 sm:mt-4 space-y-2 sm:space-y-3 text-xs sm:text-sm">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4">
-            <div className="min-w-0 flex-1">
-              <span className="text-gray-500 dark:text-gray-400">From: </span>
-              <span className="text-gray-900 dark:text-white font-medium break-all">{email.sender || 'Unknown sender'}</span>
-            </div>
-            <div className="flex items-center space-x-1 sm:space-x-2 text-gray-500 dark:text-gray-400 flex-shrink-0">
-              <span>📅</span>
-              <span className="text-gray-900 dark:text-white font-medium text-xs sm:text-sm">
-                {email.internalDate ? formatDateTime(email.internalDate) : 'Date not available'}
-              </span>
-            </div>
-          </div>
-          <div className="min-w-0">
-            <span className="text-gray-500 dark:text-gray-400">To: </span>
-            <span className="text-gray-900 dark:text-white font-medium break-all">{email.to || 'Unknown recipient'}</span>
-          </div>
-        </div>
-
-
-        {/* Action Buttons */}
-        <div className="mt-3 sm:mt-4 flex flex-wrap items-center gap-2 sm:gap-3">
-          <button className="bg-blue-600 hover:bg-blue-500 text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg flex items-center space-x-1 sm:space-x-2 transition-colors text-sm">
-            <Reply className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-            <span className="hidden sm:inline">Reply</span>
-            <span className="sm:hidden">Reply</span>
-          </button>
-          <button className="border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg flex items-center space-x-1 sm:space-x-2 transition-colors text-sm">
-            <ReplyAll className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-            <span className="hidden sm:inline">Reply All</span>
-            <span className="sm:hidden">All</span>
-          </button>
-          <button className="border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg flex items-center space-x-1 sm:space-x-2 transition-colors text-sm">
-            <Forward className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-            <span className="hidden sm:inline">Forward</span>
-            <span className="sm:hidden">Fwd</span>
-          </button>
         </div>
       </div>
 
       {/* Email Body - Scrollable Content */}
       <div className="flex-1 overflow-y-auto">
-        <div className="p-3 sm:p-4 md:p-6">
-          <div className="bg-gray-100/50 dark:bg-gray-800/30 rounded-lg p-3 sm:p-4 md:p-6 mb-4 sm:mb-6">
-            <div className="text-gray-800 dark:text-gray-300 leading-relaxed text-sm sm:text-base break-words overflow-wrap-anywhere">
-              {/* Display main email content */}
-              {decryptedContent ? (
-                // Show decrypted content (always as plain text)
-                <div className="whitespace-pre-wrap">
-                  <div className="flex items-center space-x-2 mb-4">
-                    <Unlock className="w-5 h-5 text-green-600" />
-                    <span className="text-green-600 dark:text-green-400 font-semibold">Decrypted Message</span>
+        <div className="px-3 sm:px-6 md:px-8 py-4 sm:py-6">
+          <div className="max-w-5xl mx-auto space-y-4 sm:space-y-6">
+            <div className="bg-gray-100/50 dark:bg-gray-800/30 rounded-lg lg:rounded-2xl p-3 sm:p-4 md:p-6">
+              <div className="text-gray-800 dark:text-gray-300 leading-relaxed text-sm sm:text-base break-words overflow-wrap-anywhere">
+                {/* Display main email content */}
+                {decryptedContent ? (
+                  // Show decrypted content (always as plain text)
+                  <div className="whitespace-pre-wrap">
+                    <div className="flex items-center space-x-2 mb-4">
+                      <Unlock className="w-5 h-5 text-green-600" />
+                      <span className="text-green-600 dark:text-green-400 font-semibold">Decrypted Message</span>
+                    </div>
+                    {decryptedContent}
                   </div>
-                  {decryptedContent}
-                </div>
-              ) : (
-                <div className={`${email.isEncrypted && emailBodyContent ? 'font-mono text-sm break-all' : ''}`}>
-                  {(() => {
-                    const content = emailBodyContent || email.snippet || '';
+                ) : (
+                  <div className={`${email.isEncrypted && emailBodyContent ? 'font-mono text-sm break-all' : ''}`}>
+                    {(() => {
+                      const content = emailBodyContent || email.snippet || '';
 
-                    // Check if content is HTML - relaxed check
-                    // If it has HTML tags or we determined it was HTML during extraction (by it being assigned to bodyContent when it was from a text/html part)
-                    // we should render it as HTML.
-                    const hasHtmlTags = /<[a-z][\s\S]*>/i.test(content);
-                    const isLikelyHtml = hasHtmlTags || (email.payload?.mimeType === 'text/html');
+                      // Check if content is HTML - relaxed check
+                      // If it has HTML tags or we determined it was HTML during extraction (by it being assigned to bodyContent when it was from a text/html part)
+                      // we should render it as HTML.
+                      const hasHtmlTags = /<[a-z][\s\S]*>/i.test(content);
+                      const isLikelyHtml = hasHtmlTags || (email.payload?.mimeType === 'text/html');
 
-                    if (isLikelyHtml && !email.isEncrypted) {
-                      // Render HTML content
-                      return (
-                        <div
-                          className="email-content dark:text-gray-300"
-                          dangerouslySetInnerHTML={{ __html: content }}
-                        />
-                      );
-                    } else {
-                      // Render as plain text
-                      return (
-                        <div className="whitespace-pre-wrap">
-                          {content || (
-                            <div className="text-gray-600 dark:text-gray-400 italic">
-                              <p>No content available for this email.</p>
-                              <div className="mt-4 p-4 bg-gray-200 dark:bg-gray-700 rounded text-xs">
-                                <strong>Debug Info:</strong>
-                                <br />Body Content: {email.bodyContent ? 'Available' : 'None'}
-                                <br />Body: {email.body ? 'Available' : 'None'}
-                                <br />Snippet: {email.snippet ? email.snippet : 'None'}
-                                <br />Has Payload: {email.payload ? 'Yes' : 'No'}
-                                {email.payload?.body?.data && <><br />Payload Body Data: Available</>}
-                                {email.payload?.parts && <><br />Payload Parts: {email.payload.parts.length}</>}
+                      if (isLikelyHtml && !email.isEncrypted) {
+                        // Render HTML content
+                        return (
+                          <div
+                            className="email-content dark:text-gray-300"
+                            dangerouslySetInnerHTML={{ __html: content }}
+                          />
+                        );
+                      } else {
+                        // Render as plain text
+                        return (
+                          <div className="whitespace-pre-wrap">
+                            {content || (
+                              <div className="text-gray-600 dark:text-gray-400 italic">
+                                <p>No content available for this email.</p>
+                                <div className="mt-4 p-4 bg-gray-200 dark:bg-gray-700 rounded text-xs">
+                                  <strong>Debug Info:</strong>
+                                  <br />Body Content: {email.bodyContent ? 'Available' : 'None'}
+                                  <br />Body: {email.body ? 'Available' : 'None'}
+                                  <br />Snippet: {email.snippet ? email.snippet : 'None'}
+                                  <br />Has Payload: {email.payload ? 'Yes' : 'No'}
+                                  {email.payload?.body?.data && <><br />Payload Body Data: Available</>}
+                                  {email.payload?.parts && <><br />Payload Parts: {email.payload.parts.length}</>}
+                                </div>
                               </div>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    }
-                  })()}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Show encrypted content details if available */}
-          {email.isEncrypted && email.bodyContent && !decryptedContent && (
-            <div className="bg-blue-100/50 dark:bg-blue-900/30 border border-blue-300 dark:border-blue-700 rounded-lg p-3 sm:p-4 mb-3 sm:mb-4">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
-                <div className="flex items-center space-x-2">
-                  <Shield className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 dark:text-blue-400" />
-                  <span className="text-blue-600 dark:text-blue-400 font-semibold text-sm sm:text-base">Encrypted Email</span>
-                </div>
-                <button
-                  onClick={decryptEmail}
-                  disabled={decryptLoading}
-                  className="flex items-center justify-center space-x-1 sm:space-x-2 px-3 sm:px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg transition-colors text-xs sm:text-sm font-medium w-full sm:w-auto"
-                >
-                  {decryptLoading ? (
-                    <>
-                      <Loader2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-spin" />
-                      <span>Decrypting...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Lock className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                      <span>Decrypt Message</span>
-                    </>
-                  )}
-                </button>
-              </div>
-
-              {/* Check for encryption metadata */}
-              {email.bodyContent.includes('--- ENCRYPTED METADATA ---') && (
-                <div className="mb-3">
-                  <h4 className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Encryption Information:</h4>
-                  <div className="bg-gray-200 dark:bg-gray-800 rounded p-2 sm:p-3 text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 font-mono break-all overflow-hidden max-h-32 overflow-y-auto">
-                    {email.bodyContent.match(/--- ENCRYPTED METADATA ---\n([\s\S]*?)\n--- END METADATA ---/)?.[1] || 'Metadata not available'}
+                            )}
+                          </div>
+                        );
+                      }
+                    })()}
                   </div>
-                </div>
-              )}
-
-              <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-                This message is encrypted. Click "Decrypt Message" to view the content.
-              </div>
-            </div>
-          )}
-
-          {/* Show additional message info if available */}
-          {email.payload && (
-            <div className="bg-gray-100/50 dark:bg-gray-800/50 rounded-lg p-3 sm:p-4">
-              <h4 className="text-xs sm:text-sm font-semibold text-gray-900 dark:text-white mb-2">Message Details</h4>
-              <div className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 space-y-1">
-                <div className="break-all">Message ID: {email.id}</div>
-                {email.threadId && <div className="break-all">Thread ID: {email.threadId}</div>}
-                {email.labelIds && email.labelIds.length > 0 && (
-                  <div className="break-words">Labels: {email.labelIds.join(', ')}</div>
                 )}
               </div>
             </div>
-          )}
+
+            {/* Show encrypted content details if available */}
+            {email.isEncrypted && email.bodyContent && !decryptedContent && (
+              <div className="bg-blue-100/50 dark:bg-blue-900/30 border border-blue-300 dark:border-blue-700 rounded-lg lg:rounded-2xl p-3 sm:p-4">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
+                  <div className="flex items-center space-x-2">
+                    <Shield className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 dark:text-blue-400" />
+                    <span className="text-blue-600 dark:text-blue-400 font-semibold text-sm sm:text-base">Encrypted Email</span>
+                  </div>
+                  <div className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-purple-600/20 border border-purple-500/40 text-purple-600 dark:text-purple-300 rounded-lg w-full sm:w-auto text-xs sm:text-sm font-medium">
+                    <Lock className="w-4 h-4" />
+                    <span>Decrypt Message</span>
+                  </div>
+                </div>
+
+                {/* Check for encryption metadata */}
+                {email.bodyContent.includes('--- ENCRYPTED METADATA ---') && (
+                  <div className="mb-3">
+                    <h4 className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Encryption Information:</h4>
+                    <div className="bg-gray-200 dark:bg-gray-800 rounded p-2 sm:p-3 text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 font-mono break-all overflow-hidden max-h-32 sm:max-h-48 overflow-y-auto">
+                      {email.bodyContent.match(/--- ENCRYPTED METADATA ---\n([\s\S]*?)\n--- END METADATA ---/)?.[1] || 'Metadata not available'}
+                    </div>
+                  </div>
+                )}
+
+                <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                  This message is encrypted. Click "Decrypt Message" to view the content.
+                </div>
+              </div>
+            )}
+
+            {/* Show additional message info if available */}
+            {email.payload && (
+              <div className="bg-gray-100/50 dark:bg-gray-800/50 rounded-lg lg:rounded-2xl p-3 sm:p-4">
+                <h4 className="text-xs sm:text-sm font-semibold text-gray-900 dark:text-white mb-2">Message Details</h4>
+                <div className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 space-y-1">
+                  <div className="break-all">Message ID: {email.id}</div>
+                  {email.threadId && <div className="break-all">Thread ID: {email.threadId}</div>}
+                  {email.labelIds && email.labelIds.length > 0 && (
+                    <div className="break-words">Labels: {email.labelIds.join(', ')}</div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
