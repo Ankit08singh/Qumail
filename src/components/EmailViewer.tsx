@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   ArrowLeft,
   Star,
@@ -17,9 +17,13 @@ import {
   Link,
   Lock,
   Unlock,
-  Loader2
+  Loader2,
+  Play,
+  Pause,
+  Volume2
 } from 'lucide-react';
 import API from '@/utils/axios';
+import { decompressAudioForReceiver, createAudioBlob, createAudioUrl } from '@/utils/audioCompression';
 
 interface GmailMessage {
   id: string;
@@ -74,6 +78,10 @@ const EmailViewer: React.FC<EmailViewerProps> = ({
   const [localDecryptLoading, setLocalDecryptLoading] = useState(false);
   const [localDecryptedContent, setLocalDecryptedContent] = useState<string | null>(null);
   const [emailBodyContent, setEmailBodyContent] = useState<string>(email.bodyContent || email.body || '');
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [audioLoading, setAudioLoading] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   
   const decryptLoading = externalDecryptLoading !== undefined ? externalDecryptLoading : localDecryptLoading;
   const decryptedContent = externalDecryptedContent !== undefined ? externalDecryptedContent : localDecryptedContent;
@@ -177,6 +185,101 @@ const EmailViewer: React.FC<EmailViewerProps> = ({
       hour12: true
     });
   };
+
+  // Audio handling functions
+  const processAudioData = async (audioDataWithMimeType: string) => {
+    try {
+      setAudioLoading(true);
+      console.log('Processing compressed audio data...');
+      
+      // Extract MIME type and compressed data
+      const colonIndex = audioDataWithMimeType.indexOf(':');
+      if (colonIndex === -1) {
+        throw new Error('Invalid audio data format - missing colon separator');
+      }
+      
+      const mimeType = audioDataWithMimeType.substring(0, colonIndex);
+      const compressedAudioBase64 = audioDataWithMimeType.substring(colonIndex + 1);
+      
+      if (!compressedAudioBase64) {
+        throw new Error('Invalid audio data format - missing compressed data');
+      }
+      
+      console.log('Audio MIME type:', mimeType);
+      console.log('Compressed data length:', compressedAudioBase64.length);
+      
+      // Decompress audio data
+      const audioData = decompressAudioForReceiver(compressedAudioBase64);
+      
+      // Create audio blob with the correct MIME type
+      const audioBlob = createAudioBlob(audioData, mimeType || 'audio/webm');
+      
+      // Create audio URL
+      const url = createAudioUrl(audioBlob);
+      setAudioUrl(url);
+      
+      console.log('Audio processed successfully with MIME type:', mimeType);
+      console.log('Final audio data size:', audioData.length);
+    } catch (error) {
+      console.error('Error processing audio:', error);
+      alert('Failed to process audio message: ' + (error as Error).message);
+    } finally {
+      setAudioLoading(false);
+    }
+  };
+
+  // Clean decrypted content to hide raw audio data
+  const getCleanDecryptedContent = (content: string) => {
+    if (!content) return content;
+    
+    // Remove the AUDIO_COMPRESSED part from display
+    return content.replace(/AUDIO_COMPRESSED:[\s\S]*$/, '').trim();
+  };
+
+  const handlePlayPause = () => {
+    if (!audioRef.current || !audioUrl) return;
+    
+    console.log('Play/Pause clicked, current state:', {
+      isPlaying,
+      audioUrl: audioUrl ? 'exists' : 'missing',
+      audioElement: audioRef.current ? 'exists' : 'missing',
+      paused: audioRef.current.paused,
+      ended: audioRef.current.ended,
+      readyState: audioRef.current.readyState
+    });
+    
+    if (isPlaying) {
+      audioRef.current.pause();
+      console.log('Audio paused');
+    } else {
+      audioRef.current.play().then(() => {
+        console.log('Audio play successful');
+      }).catch((error) => {
+        console.error('Error playing audio:', error);
+        alert('Failed to play audio: ' + error.message);
+      });
+    }
+    setIsPlaying(!isPlaying);
+  };
+
+  // Check if decrypted content contains compressed audio
+  useEffect(() => {
+    if (decryptedContent && decryptedContent.includes('AUDIO_COMPRESSED:')) {
+      const audioMatch = decryptedContent.match(/AUDIO_COMPRESSED:(.+)/);
+      if (audioMatch && audioMatch[1]) {
+        processAudioData(audioMatch[1].trim());
+      }
+    }
+  }, [decryptedContent]);
+
+  // Cleanup audio URL on unmount
+  useEffect(() => {
+    return () => {
+      if (audioUrl) {
+        URL.revokeObjectURL(audioUrl);
+      }
+    };
+  }, [audioUrl]);
 
   return (
     <div className="flex-1 bg-white dark:bg-gray-900 flex flex-col h-full">
@@ -339,13 +442,13 @@ const EmailViewer: React.FC<EmailViewerProps> = ({
               <div className="text-gray-800 dark:text-gray-300 leading-relaxed text-sm sm:text-base break-words overflow-wrap-anywhere">
                 {/* Display main email content */}
                 {decryptedContent ? (
-                  // Show decrypted content (always as plain text)
+                  // Show decrypted content (always as plain text) but hide raw audio data
                   <div className="whitespace-pre-wrap">
                     <div className="flex items-center space-x-2 mb-4">
                       <Unlock className="w-5 h-5 text-green-600" />
                       <span className="text-green-600 dark:text-green-400 font-semibold">Decrypted Message</span>
                     </div>
-                    {decryptedContent}
+                    {getCleanDecryptedContent(decryptedContent)}
                   </div>
                 ) : (
                   <div className={`${email.isEncrypted && emailBodyContent ? 'font-mono text-sm break-all' : ''}`}>
@@ -392,6 +495,62 @@ const EmailViewer: React.FC<EmailViewerProps> = ({
                 )}
               </div>
             </div>
+
+            {/* Audio Player Section - Show when audio is available */}
+            {audioUrl && (
+              <div className="bg-green-100/50 dark:bg-green-900/30 border border-green-300 dark:border-green-700 rounded-lg lg:rounded-2xl p-3 sm:p-4">
+                <div className="flex items-center space-x-2 mb-3">
+                  <Volume2 className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 dark:text-green-400" />
+                  <span className="text-green-600 dark:text-green-400 font-semibold text-sm sm:text-base">Voice Message</span>
+                </div>
+                
+                <div className="flex items-center justify-center gap-3">
+                  <button
+                    onClick={handlePlayPause}
+                    disabled={audioLoading}
+                    className="flex items-center justify-center w-12 h-12 bg-green-600 hover:bg-green-500 disabled:bg-gray-400 text-white rounded-full transition-colors"
+                    title={isPlaying ? 'Pause' : 'Play'}
+                  >
+                    {audioLoading ? (
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    ) : isPlaying ? (
+                      <Pause className="w-5 h-5" />
+                    ) : (
+                      <Play className="w-5 h-5" />
+                    )}
+                  </button>
+                  
+                  <div className="flex-1">
+                    <div className="text-xs text-gray-600 dark:text-gray-400">
+                      {isPlaying ? 'Playing voice message...' : 'Click to play voice message'}
+                    </div>
+                  </div>
+                </div>
+                
+                <audio
+                  ref={audioRef}
+                  src={audioUrl}
+                  onPlay={() => setIsPlaying(true)}
+                  onPause={() => setIsPlaying(false)}
+                  onEnded={() => setIsPlaying(false)}
+                  onError={(e) => {
+                    console.error('Audio error:', e);
+                    console.error('Audio error details:', audioRef.current?.error);
+                    alert('Failed to load audio: ' + (audioRef.current?.error?.message || 'Unknown error'));
+                  }}
+                  onLoadStart={() => console.log('Audio load started')}
+                  onCanPlay={() => console.log('Audio can play')}
+                  onLoadedMetadata={(e) => {
+                    console.log('Audio metadata loaded:', {
+                      duration: audioRef.current?.duration,
+                      readyState: audioRef.current?.readyState
+                    });
+                  }}
+                  preload="metadata"
+                  className="hidden"
+                />
+              </div>
+            )}
 
             {/* Show encrypted content details if available */}
             {email.isEncrypted && email.bodyContent && !decryptedContent && (

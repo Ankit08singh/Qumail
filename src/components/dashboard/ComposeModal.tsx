@@ -1,6 +1,7 @@
 import { ArrowLeft, X, Save, Send, Loader2, Paperclip, Mic, FileText, Image as ImageIcon, StopCircle, Play, Key, RefreshCw, Shield } from "lucide-react";
 import SecurityPanel from "./SecurityPanel";
 import { useState, useEffect, useRef } from "react";
+import { blobToArrayBuffer, compressAudioForSender } from "@/utils/audioCompression";
 
 type EncryptionType = 'AES' | 'QKD' | 'OTP' | 'PQC' | 'None';
 
@@ -18,7 +19,7 @@ interface ComposeModalProps {
   loading: boolean;
   onClose: () => void;
   onFormChange: (form: EmailForm) => void;
-  onSend: (e: React.FormEvent) => void;
+  onSend: (e: React.FormEvent, audioData?: string) => void;
 }
 
 export default function ComposeModal({
@@ -35,6 +36,7 @@ export default function ComposeModal({
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const [recordingTime, setRecordingTime] = useState(0);
+  const [audioMimeType, setAudioMimeType] = useState<string>('audio/webm');
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [keySize, setKeySize] = useState<number>(1); // in KB
   const [generatingKey, setGeneratingKey] = useState(false);
@@ -100,14 +102,19 @@ export default function ComposeModal({
       const chunks: BlobPart[] = []; // Using buffer to collect audio chunks
 
       recorder.ondataavailable = (e) => {
-        chunks.push(e.data); // Buffer approach - collecting audio data chunks
-        console.log('Audio chunk received:', e.data.size, 'bytes, total chunks:', chunks.length);
+        chunks.push(e.data); // Buffer approach - collecting audio chunks
+        console.log('Audio chunk received:', e.data.size, 'bytes, MIME type:', e.data.type, 'total chunks:', chunks.length);
       };
 
       recorder.onstop = () => {
         console.log('Recording stopped. Total chunks collected:', chunks.length);
         console.log('Total buffer size:', chunks.reduce((total, chunk) => total + (chunk as Blob).size, 0), 'bytes');
-        const blob = new Blob(chunks, { type: 'audio/webm' });
+        
+        // Detect the actual MIME type from the first chunk or use MediaRecorder's MIME type
+        const detectedMimeType = chunks[0] && (chunks[0] as Blob).type ? (chunks[0] as Blob).type : recorder.mimeType || 'audio/webm';
+        console.log('Detected MIME type:', detectedMimeType);
+        
+        const blob = new Blob(chunks, { type: detectedMimeType });
         console.log('Final audio blob created:', blob.size, 'bytes');
         console.log('Voice Blob Details:', {
           size: blob.size,
@@ -116,6 +123,11 @@ export default function ComposeModal({
           duration: recordingTime + ' seconds'
         });
         console.log('Blob Object:', blob);
+        
+        // Store the MIME type for later use
+        setAudioMimeType(detectedMimeType);
+        setAudioBlob(blob);
+        
         blob.arrayBuffer()
           .then((buffer) => {
             const binaryData = new Uint8Array(buffer);
@@ -124,7 +136,6 @@ export default function ComposeModal({
           .catch((error) => {
             console.error('Error reading blob binary data:', error);
           });
-        setAudioBlob(blob);
         stream.getTracks().forEach(track => track.stop());
       };
 
@@ -167,7 +178,6 @@ export default function ComposeModal({
     const audioElement = audioRef.current;
     if (!audioElement || !audioUrl) return;
 
-    audioElement.currentTime = 0;
     audioElement.play().catch((error) => {
       console.error('Error playing audio:', error);
     });
@@ -177,6 +187,41 @@ export default function ComposeModal({
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // Function to compress audio data before sending
+  const getCompressedAudioData = async (): Promise<string | null> => {
+    if (!audioBlob) return null;
+    
+    try {
+      console.log('Compressing audio data for transmission...');
+      console.log('Audio MIME type:', audioMimeType);
+      
+      const arrayBuffer = await blobToArrayBuffer(audioBlob);
+      const compressedAudio = compressAudioForSender(arrayBuffer);
+      
+      // Include MIME type in the compressed data for receiver
+      const audioDataWithMimeType = `${audioMimeType}:${compressedAudio}`;
+      
+      console.log('Audio compressed successfully with MIME type');
+      return audioDataWithMimeType;
+    } catch (error) {
+      console.error('Error compressing audio:', error);
+      throw new Error('Failed to compress audio for transmission');
+    }
+  };
+
+  // Handle form submission with audio data
+  const handleFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    try {
+      const compressedAudio = await getCompressedAudioData();
+      onSend(e, compressedAudio || undefined);
+    } catch (error) {
+      console.error('Error preparing email for sending:', error);
+      alert('Failed to prepare audio for sending');
+    }
   };
 
   return (
@@ -210,7 +255,7 @@ export default function ComposeModal({
 
           {/* Compose Form */}
           <div className="flex-1 overflow-y-auto min-h-0 overscroll-contain">
-            <form onSubmit={onSend} className="p-3 sm:p-4 lg:p-6 space-y-3 sm:space-y-4 pb-24 sm:pb-20">
+            <form onSubmit={handleFormSubmit} className="p-3 sm:p-4 lg:p-6 space-y-3 sm:space-y-4 pb-24 sm:pb-20">
               <div>
                 <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1.5 sm:mb-2">To</label>
                 <input

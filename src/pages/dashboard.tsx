@@ -207,23 +207,30 @@ export default function Dashboard() {
   };
 
   // Handle compose send
-  const handleSend = async (e: React.FormEvent) => {
+  const handleSend = async (e: React.FormEvent, audioData?: string) => {
     e.preventDefault();
     setSendingEmail(true);
     try {
+      // Prepare email body with audio if present
+      let finalBody = emailForm.body;
+      if (audioData) {
+        finalBody = `${emailForm.body}\n\nAUDIO_COMPRESSED:${audioData}`;
+      }
+
       if (provider === 'azure-ad') {
         // Send via Outlook - use the Outlook-specific sendEmail
         await outlookOps.sendEmail({
           to: emailForm.to,
           subject: emailForm.subject,
-          body: emailForm.body,
+          body: finalBody,
           isHtml: emailForm.isHtml,
         });
         console.log("Outlook email sent successfully");
         alert('Email sent successfully!');
       } else {
         // Send via Gmail (existing logic)
-        const res = await API.post('/auth/send-encrypted-email', emailForm);
+        const emailData = { ...emailForm, body: finalBody };
+        const res = await API.post('/auth/send-encrypted-email', emailData);
         console.log("Gmail email sent successfully:", res);
         alert('Email sent successfully!');
       }
