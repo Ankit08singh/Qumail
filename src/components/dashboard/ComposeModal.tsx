@@ -2,6 +2,7 @@ import { ArrowLeft, X, Save, Send, Loader2, Paperclip, Mic, FileText, Image as I
 import SecurityPanel from "./SecurityPanel";
 import { useState, useEffect, useRef } from "react";
 import { blobToArrayBuffer, compressAudioForSender } from "@/utils/audioCompression";
+import { compressMultipleFiles, CompressedFile, formatFileSize } from "@/utils/fileCompression";
 
 type EncryptionType = 'AES' | 'QKD' | 'OTP' | 'PQC' | 'None';
 
@@ -19,7 +20,7 @@ interface ComposeModalProps {
   loading: boolean;
   onClose: () => void;
   onFormChange: (form: EmailForm) => void;
-  onSend: (e: React.FormEvent, audioData?: string) => void;
+  onSend: (e: React.FormEvent, audioData?: string, filesData?: CompressedFile[]) => void;
 }
 
 export default function ComposeModal({
@@ -31,6 +32,7 @@ export default function ComposeModal({
   onSend
 }: ComposeModalProps) {
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
+  const [compressedFiles, setCompressedFiles] = useState<CompressedFile[]>([]);
   const [isRecording, setIsRecording] = useState(false);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
@@ -81,18 +83,32 @@ export default function ComposeModal({
     onFormChange({ ...emailForm, [field]: value });
   };
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     const validFiles = files.filter(file => {
       const isPDF = file.type === 'application/pdf';
       const isImage = ['image/jpeg', 'image/jpg', 'image/png'].includes(file.type);
       return isPDF || isImage;
     });
+    
+    // Store original files for display
     setAttachedFiles(prev => [...prev, ...validFiles]);
+    
+    // Compress files and store compressed data
+    try {
+      const compressed = await compressMultipleFiles(validFiles);
+      setCompressedFiles(prev => [...prev, ...compressed]);
+      console.log('Files compressed successfully:', compressed.map(f => ({ name: f.name, ratio: f.compressionRatio.toFixed(2) + '%' })));
+    } catch (error) {
+      console.error('Error compressing files:', error);
+      alert('Failed to compress some files. They will be sent uncompressed.');
+      // Keep original files as fallback
+    }
   };
 
   const removeFile = (index: number) => {
     setAttachedFiles(prev => prev.filter((_, i) => i !== index));
+    setCompressedFiles(prev => prev.filter((_, i) => i !== index));
   };
 
   const startRecording = async () => {
@@ -189,6 +205,11 @@ export default function ComposeModal({
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  // Function to get compressed files data for sending
+  const getCompressedFilesData = (): CompressedFile[] => {
+    return compressedFiles;
+  };
+
   // Function to compress audio data before sending
   const getCompressedAudioData = async (): Promise<string | null> => {
     if (!audioBlob) return null;
@@ -211,16 +232,19 @@ export default function ComposeModal({
     }
   };
 
-  // Handle form submission with audio data
+  // Handle form submission with audio and file data
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     try {
       const compressedAudio = await getCompressedAudioData();
-      onSend(e, compressedAudio || undefined);
+      const compressedFilesData = getCompressedFilesData();
+      
+      // Pass both audio and files data to parent
+      onSend(e, compressedAudio || undefined, compressedFilesData);
     } catch (error) {
       console.error('Error preparing email for sending:', error);
-      alert('Failed to prepare audio for sending');
+      alert('Failed to prepare attachments for sending');
     }
   };
 
@@ -419,7 +443,12 @@ export default function ComposeModal({
                                 <ImageIcon className="w-4 h-4 text-blue-400" />
                               )}
                               <span className="text-sm text-gray-300 truncate max-w-xs">{file.name}</span>
-                              <span className="text-xs text-gray-500">({(file.size / 1024).toFixed(1)} KB)</span>
+                              <span className="text-xs text-gray-500">({formatFileSize(file.size)})</span>
+                              {compressedFiles[index] && (
+                                <span className="text-xs text-green-400 ml-1">
+                                  ({compressedFiles[index].compressionRatio.toFixed(1)}% saved)
+                                </span>
+                              )}
                             </div>
                             <button
                               type="button"

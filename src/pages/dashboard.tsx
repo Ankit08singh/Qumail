@@ -2,6 +2,7 @@ import { useSession } from "next-auth/react";
 import { GetServerSideProps } from "next";
 import { getSession } from "next-auth/react";
 import { useState, useEffect, useRef } from "react";
+import { compressMultipleFiles, CompressedFile } from "@/utils/fileCompression";
 import EmailViewer from '@/components/EmailViewer';
 import TopHeader from '@/components/dashboard/TopHeader';
 import Sidebar from '@/components/dashboard/Sidebar';
@@ -207,14 +208,21 @@ export default function Dashboard() {
   };
 
   // Handle compose send
-  const handleSend = async (e: React.FormEvent, audioData?: string) => {
+  const handleSend = async (e: React.FormEvent, audioData?: string, filesData?: CompressedFile[]) => {
     e.preventDefault();
     setSendingEmail(true);
     try {
-      // Prepare email body with audio if present
+      // Prepare email body with attachments
       let finalBody = emailForm.body;
+      
+      // Add audio data if present
       if (audioData) {
-        finalBody = `${emailForm.body}\n\nAUDIO_COMPRESSED:${audioData}`;
+        finalBody = `${finalBody}\n\nAUDIO_COMPRESSED:${audioData}`;
+      }
+      
+      // Add file attachments if present
+      if (filesData && filesData.length > 0) {
+        finalBody = `${finalBody}\n\nFILES_COMPRESSED:${JSON.stringify(filesData)}`;
       }
 
       if (provider === 'azure-ad') {
