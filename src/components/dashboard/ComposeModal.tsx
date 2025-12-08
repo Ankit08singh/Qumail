@@ -1,6 +1,6 @@
-import { ArrowLeft, X, Save, Send, Loader2 } from "lucide-react";
+import { ArrowLeft, X, Save, Send, Loader2, Paperclip, Mic, FileText, Image as ImageIcon, StopCircle, Play } from "lucide-react";
 import SecurityPanel from "./SecurityPanel";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 type EncryptionType = 'AES' | 'QKD' | 'OTP' | 'PQC' | 'None';
 
@@ -29,10 +29,150 @@ export default function ComposeModal({
   onFormChange,
   onSend
 }: ComposeModalProps) {
+  const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
+  const [isRecording, setIsRecording] = useState(false);
+  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+  const [recordingTime, setRecordingTime] = useState(0);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    if (!audioBlob) {
+      setAudioUrl(null);
+      return;
+    }
+
+    const url = URL.createObjectURL(audioBlob);
+    setAudioUrl(url);
+
+    return () => {
+      URL.revokeObjectURL(url);
+    };
+  }, [audioBlob]);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isRecording) {
+      interval = setInterval(() => {
+        setRecordingTime(prev => {
+          const newTime = prev + 1;
+          // Auto stop at 10 seconds
+          if (newTime >= 10) {
+            stopRecording();
+            return 10;
+          }
+          return newTime;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [isRecording]);
+
   if (!isOpen) return null;
 
   const handleInputChange = (field: keyof EmailForm, value: string | EncryptionType) => {
     onFormChange({ ...emailForm, [field]: value });
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    const validFiles = files.filter(file => {
+      const isPDF = file.type === 'application/pdf';
+      const isImage = ['image/jpeg', 'image/jpg', 'image/png'].includes(file.type);
+      return isPDF || isImage;
+    });
+    setAttachedFiles(prev => [...prev, ...validFiles]);
+  };
+
+  const removeFile = (index: number) => {
+    setAttachedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      const chunks: BlobPart[] = []; // Using buffer to collect audio chunks
+
+      recorder.ondataavailable = (e) => {
+        chunks.push(e.data); // Buffer approach - collecting audio data chunks
+        console.log('Audio chunk received:', e.data.size, 'bytes, total chunks:', chunks.length);
+      };
+
+      recorder.onstop = () => {
+        console.log('Recording stopped. Total chunks collected:', chunks.length);
+        console.log('Total buffer size:', chunks.reduce((total, chunk) => total + (chunk as Blob).size, 0), 'bytes');
+        const blob = new Blob(chunks, { type: 'audio/webm' });
+        console.log('Final audio blob created:', blob.size, 'bytes');
+        console.log('Voice Blob Details:', {
+          size: blob.size,
+          type: blob.type,
+          lastModified: Date.now(),
+          duration: recordingTime + ' seconds'
+        });
+        console.log('Blob Object:', blob);
+        blob.arrayBuffer()
+          .then((buffer) => {
+            const binaryData = new Uint8Array(buffer);
+            console.log('Voice binary data (Uint8Array):', binaryData);
+          })
+          .catch((error) => {
+            console.error('Error reading blob binary data:', error);
+          });
+        setAudioBlob(blob);
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      // Auto stop after 10 seconds
+      setTimeout(() => {
+        if (recorder.state === 'recording') {
+          console.log('10-second limit reached, auto-stopping recording...');
+          recorder.stop();
+        }
+      }, 10000);
+
+      recorder.start();
+      setMediaRecorder(recorder);
+      setIsRecording(true);
+      setRecordingTime(0);
+    } catch (error) {
+      console.error('Error accessing microphone:', error);
+      alert('Could not access microphone. Please grant permission.');
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+      mediaRecorder.stop();
+      setIsRecording(false);
+      setMediaRecorder(null);
+    }
+  };
+
+  const removeAudio = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
+    setAudioBlob(null);
+    setRecordingTime(0);
+  };
+
+  const handlePlayAudio = () => {
+    const audioElement = audioRef.current;
+    if (!audioElement || !audioUrl) return;
+
+    audioElement.currentTime = 0;
+    audioElement.play().catch((error) => {
+      console.error('Error playing audio:', error);
+    });
+  };
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   return (
@@ -103,10 +243,130 @@ export default function ComposeModal({
                 />
               </div>
 
+              {/* Attachments Display */}
+              {(attachedFiles.length > 0 || audioBlob) && (
+                <div className="space-y-2">
+                  {attachedFiles.length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-xs text-gray-400">Attached Files:</p>
+                      <div className="space-y-1.5">
+                        {attachedFiles.map((file, index) => (
+                          <div key={index} className="flex items-center justify-between bg-gray-800 border border-gray-600 rounded-lg px-3 py-2">
+                            <div className="flex items-center space-x-2">
+                              {file.type === 'application/pdf' ? (
+                                <FileText className="w-4 h-4 text-red-400" />
+                              ) : (
+                                <ImageIcon className="w-4 h-4 text-blue-400" />
+                              )}
+                              <span className="text-sm text-gray-300 truncate max-w-xs">{file.name}</span>
+                              <span className="text-xs text-gray-500">({(file.size / 1024).toFixed(1)} KB)</span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => removeFile(index)}
+                              className="text-gray-400 hover:text-red-400 transition-colors"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {audioBlob && (
+                    <div className="space-y-2">
+                      <p className="text-xs text-gray-400">Voice Recording:</p>
+                      <div className="flex items-center justify-between bg-gray-800 border border-gray-600 rounded-lg px-3 py-2">
+                        <div className="flex items-center space-x-2">
+                          <Mic className="w-4 h-4 text-green-400" />
+                          <span className="text-sm text-gray-300">Voice Message</span>
+                          <span className="text-xs text-gray-500">({recordingTime}s / 10s max)</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <button
+                            type="button"
+                            onClick={handlePlayAudio}
+                            className="flex items-center space-x-1 text-gray-400 hover:text-blue-400 hover:bg-gray-700 px-2 py-1 rounded-lg transition-colors"
+                            title="Replay voice message"
+                          >
+                            <Play className="w-4 h-4" />
+                            <span className="hidden sm:inline text-sm">Replay</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={removeAudio}
+                            className="text-gray-400 hover:text-red-400 transition-colors"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                      <audio ref={audioRef} src={audioUrl ?? undefined} preload="auto" className="hidden" />
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0 pt-3 sm:pt-4 border-t border-gray-700">
-                <div className="text-xs sm:text-sm text-gray-400">
-                  {emailForm.body.length} / 12000 char
+                <div className="flex items-center space-x-2">
+                  <div className="text-xs sm:text-sm text-gray-400">
+                    {emailForm.body.length} / 12000 char
+                  </div>
+                  
+                  {/* Attachment Buttons */}
+                  <div className="flex items-center space-x-1">
+                    {/* File Attachment */}
+                    <label className="cursor-pointer">
+                      <input
+                        type="file"
+                        multiple
+                        accept=".pdf,.jpg,.jpeg,.png,image/jpeg,image/jpg,image/png,application/pdf"
+                        onChange={handleFileSelect}
+                        className="hidden"
+                      />
+                      <div className="p-2 text-gray-400 hover:text-blue-400 hover:bg-gray-700 rounded-lg transition-colors" title="Attach files (PDF, JPG, PNG)">
+                        <Paperclip className="w-4 h-4" />
+                      </div>
+                    </label>
+
+                    {/* Voice Recording */}
+                    {!isRecording ? (
+                      <button
+                        type="button"
+                        onClick={startRecording}
+                        className="p-2 text-gray-400 hover:text-green-400 hover:bg-gray-700 rounded-lg transition-colors"
+                        title="Record voice message (Max 10 seconds)"
+                      >
+                        <Mic className="w-4 h-4" />
+                      </button>
+                    ) : (
+                      <div className="flex items-center space-x-2">
+                        <button
+                          type="button"
+                          onClick={stopRecording}
+                          className="p-2 text-red-400 hover:text-red-500 hover:bg-gray-700 rounded-lg transition-colors animate-pulse"
+                          title="Stop recording"
+                        >
+                          <StopCircle className="w-4 h-4" />
+                        </button>
+                        
+                        {/* Recording Progress Bar */}
+                        <div className="flex items-center space-x-2">
+                          <div className="w-20 h-2 bg-gray-700 rounded-full overflow-hidden">
+                            <div 
+                              className="h-full bg-red-500 transition-all duration-1000 ease-linear"
+                              style={{ width: `${(recordingTime / 10) * 100}%` }}
+                            />
+                          </div>
+                          <span className="text-xs text-red-400 font-mono min-w-[2rem]">
+                            {recordingTime}/10s
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 
                 <div className="flex space-x-2 sm:space-x-3 w-full sm:w-auto">

@@ -50,6 +50,7 @@ interface EmailListProps {
   onArchiveEmail: (emailId: string) => void;
   onDeleteEmail: (emailId: string) => void;
   hasNewMessages?: boolean;
+  error?: string | null;
 }
 
 export default function EmailList({
@@ -64,7 +65,8 @@ export default function EmailList({
   onStarEmail,
   onArchiveEmail,
   onDeleteEmail,
-  hasNewMessages
+  hasNewMessages,
+  error
 }: EmailListProps) {
   const getTimeAgo = (internalDate: string) => {
     const date = new Date(parseInt(internalDate));
@@ -98,7 +100,18 @@ export default function EmailList({
   };
 
   return (
-    <div className="flex flex-col bg-white dark:bg-gray-900 lg:border-r border-gray-200 dark:border-gray-700 flex-1 h-full w-full">
+    <div className="flex-1 flex flex-col bg-white dark:bg-gray-900 lg:border-r border-gray-200 dark:border-gray-700 h-full w-full overflow-hidden">
+      {error && (
+        <div className="mb-3 sm:mb-4 md:mb-5 rounded-xl border border-red-500/30 bg-red-500/10 text-red-300 px-4 py-3 text-sm sm:text-base flex items-center justify-between">
+          <span>{error}</span>
+          <button
+            onClick={onRefresh}
+            className="ml-3 text-xs sm:text-sm font-medium text-red-200 underline-offset-2 hover:underline"
+          >
+            Retry
+          </button>
+        </div>
+      )}
       {/* Email List Header */}
       <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 p-3 sm:p-4 flex-shrink-0">
         <div className="flex items-center justify-between mb-3 sm:mb-4">
@@ -155,7 +168,7 @@ export default function EmailList({
         )}
 
         {/* Search Bar - Mobile only (md+ is in TopHeader) */}
-        <div className="relative md:hidden">
+        <div className="relative md:hidden mt-3">
           <Search className="absolute left-2.5 sm:left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-400 w-3.5 h-3.5 sm:w-4 sm:h-4" />
           <input
             type="text"
@@ -168,7 +181,7 @@ export default function EmailList({
       </div>
 
       {/* Email List */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto mt-2">
         {loading ? (
           <div className="flex items-center justify-center h-64">
             <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />

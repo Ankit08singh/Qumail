@@ -2,6 +2,7 @@ import React from 'react';
 import { useState } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import API from '@/utils/axios';
+import Logo from "@/components/Logo";
 import {
   Mail,
   Send,
@@ -288,14 +289,14 @@ export default function GmailDemo() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-950">
         <div className="text-center bg-gray-900/90 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-8 max-w-md mx-4 shadow-xl">
-          <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-6">
-            <Mail className="w-8 h-8 text-white" />
+          <div className="flex justify-center mb-6">
+            <Logo className="h-12 w-auto" priority alt="QuMail" />
           </div>
-          <h1 className="text-2xl font-bold text-white mb-2">QuMail Access Required</h1>
+          <h1 className="text-2xl font-bold text-white mb-2">Access Required</h1>
           <p className="text-gray-400 mb-6">Connect your Gmail account to access quantum-secured email features</p>
           <Link
             href="/login"
-            className="inline-flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg"
+            className="inline-flex items-center space-x-2 bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg"
           >
             <span>Connect Gmail</span>
           </Link>
@@ -329,13 +330,8 @@ export default function GmailDemo() {
               </Link>
               <div className="w-px h-6 bg-gray-700"></div>
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-                  <Mail className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <h1 className="text-xl font-bold text-white">QuMail</h1>
-                  <p className="text-gray-400 text-sm hidden sm:block">Quantum-Secured Email</p>
-                </div>
+                <Logo className="h-8 sm:h-9 w-auto" />
+                <p className="text-gray-400 text-sm hidden sm:block">Quantum-Secured Email</p>
               </div>
             </div>
             <div className="flex items-center space-x-3">
@@ -382,7 +378,7 @@ export default function GmailDemo() {
                 onClick={() => setActiveTab(tab.key as any)}
                 className={`flex items-center justify-center space-x-2 py-3 px-4 rounded-xl font-medium text-sm transition-all duration-300 ${
                   activeTab === tab.key
-                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
+                    ? 'bg-blue-600 text-white shadow-lg'
                     : 'text-gray-300 hover:text-white hover:bg-gray-800'
                 }`}
               >
@@ -406,7 +402,7 @@ export default function GmailDemo() {
               <button
                 onClick={fetchMessages}
                 disabled={loading}
-                className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white px-4 py-2 rounded-xl font-semibold disabled:opacity-50 transition-all duration-300 flex items-center space-x-2"
+                className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl font-semibold disabled:opacity-50 transition-all duration-300 flex items-center space-x-2"
               >
                 <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
                 <span>Refresh</span>
@@ -424,7 +420,7 @@ export default function GmailDemo() {
                 <p className="text-white/80">No messages found</p>
                 <button
                   onClick={fetchMessages}
-                  className="mt-4 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300"
+                  className="mt-4 bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300"
                 >
                   Load Messages
                 </button>
@@ -450,7 +446,7 @@ export default function GmailDemo() {
                         </div>
                         <button 
                           onClick={() => handleViewEmail(message)}
-                          className="px-3 py-1 sm:px-4 sm:py-2 rounded-xl font-medium transition-all duration-300 flex items-center space-x-1 flex-shrink-0 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white"
+                          className="px-3 py-1 sm:px-4 sm:py-2 rounded-xl font-medium transition-all duration-300 flex items-center space-x-1 flex-shrink-0 bg-blue-600 hover:bg-blue-500 text-white"
                         >
                           <Eye className="w-4 h-4" />
                           <span className="hidden sm:inline">View</span>
@@ -537,7 +533,7 @@ export default function GmailDemo() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-4 rounded-xl font-semibold disabled:opacity-50 transition-all duration-300 shadow-lg flex items-center justify-center space-x-2"
+                className="w-full bg-blue-600 hover:bg-blue-500 text-white px-8 py-4 rounded-xl font-semibold disabled:opacity-50 transition-all duration-300 shadow-lg flex items-center justify-center space-x-2"
               >
                 {loading ? (
                   <>
@@ -607,7 +603,7 @@ export default function GmailDemo() {
                     <button
                       onClick={decryptEmail}
                       disabled={decryptLoading}
-                      className="bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-600 hover:to-orange-700 text-white px-6 py-3 rounded-xl font-semibold disabled:opacity-50 transition-all duration-300 flex items-center space-x-2 mx-auto"
+                      className="bg-yellow-600 hover:bg-yellow-500 text-white px-6 py-3 rounded-xl font-semibold disabled:opacity-50 transition-all duration-300 flex items-center space-x-2 mx-auto"
                     >
                       {decryptLoading ? (
                         <>
@@ -665,7 +661,7 @@ export default function GmailDemo() {
             <div className="bg-gray-800/50 border-t border-gray-700/50 p-4 sm:p-6 flex justify-end">
               <button
                 onClick={() => setShowViewer(false)}
-                className="bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white px-6 py-2 rounded-xl font-semibold transition-all duration-300"
+                className="bg-gray-600 hover:bg-gray-500 text-white px-6 py-2 rounded-xl font-semibold transition-all duration-300"
               >
                 Close
               </button>

@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { Search, User, ArrowLeft, Shield, LogOut, ChevronDown, Menu } from "lucide-react";
+import { Search, User, ArrowLeft, LogOut, ChevronDown, Menu } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
+import Logo from "@/components/Logo";
 import { signOut, useSession } from "next-auth/react";
 import { useState, useRef, useEffect } from "react";
 
@@ -50,12 +51,9 @@ export default function TopHeader({ searchQuery, onSearchChange, onMenuClick }: 
           </Link>
           
           <div className="flex items-center space-x-2 sm:space-x-3">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg sm:rounded-xl flex items-center justify-center border border-blue-400/30">
-              <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-            </div>
-            <div className="hidden sm:block">
-              <h1 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">QuMail</h1>
-              <p className="text-xs text-gray-500 dark:text-gray-400">Quantum Secure</p>
+            <Logo className="h-7 sm:h-9 w-auto" />
+            <div className="hidden sm:flex flex-col leading-tight">
+              <span className="text-xs text-gray-500 dark:text-gray-400">Quantum Secure</span>
             </div>
           </div>
         </div>
@@ -87,7 +85,7 @@ export default function TopHeader({ searchQuery, onSearchChange, onMenuClick }: 
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                 className="flex items-center space-x-1 sm:space-x-2 p-1 sm:p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
               >
-                <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center">
+                <div className="w-7 h-7 sm:w-8 sm:h-8 bg-blue-600 rounded-full flex items-center justify-center">
                   <User className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
                 </div>
                 <ChevronDown className={`w-3 h-3 sm:w-4 sm:h-4 text-gray-600 dark:text-gray-400 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />

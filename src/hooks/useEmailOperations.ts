@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
+import { signOut } from 'next-auth/react';
 
 // Gmail Messages Interface
 export interface GmailMessage {
@@ -44,6 +45,15 @@ export function useEmailOperations() {
   const [lastCheckTime, setLastCheckTime] = useState<number>(Date.now());
   const [lastMessageCount, setLastMessageCount] = useState<number>(0);
   const [hasNewMessages, setHasNewMessages] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const signingOutRef = useRef(false);
+
+  const handleUnauthorized = async () => {
+    if (signingOutRef.current) return;
+    signingOutRef.current = true;
+    setError('Your session has expired. Redirecting to login...');
+    await signOut({ callbackUrl: '/login?message=session-expired' });
+  };
 
   // Helper functions
   const getEmailBodyContent = (email: GmailMessage) => {
@@ -120,6 +130,7 @@ export function useEmailOperations() {
 
   // Check for new messages without full refresh
   const checkForNewMessages = async (): Promise<boolean> => {
+    setError(null);
     try {
       const response = await fetch('/api/gmail/messages?maxResults=5', {
         method: 'GET',
@@ -127,7 +138,12 @@ export function useEmailOperations() {
           'Content-Type': 'application/json',
         },
       });
-      
+
+      if (response.status === 401) {
+        await handleUnauthorized();
+        return false;
+      }
+
       if (!response.ok) {
         console.error('Failed to check for new messages');
         return false;
@@ -154,6 +170,7 @@ export function useEmailOperations() {
       return false;
     } catch (error) {
       console.error('Error checking for new messages:', error);
+      setError('Unable to check for new messages. Please try again.');
       return false;
     }
   };
@@ -173,6 +190,7 @@ export function useEmailOperations() {
   // Fetch Gmail messages
   const fetchMessages = async () => {
     setLoading(true);
+    setError(null);
     try {
       const response = await fetch('/api/gmail/messages?maxResults=50', {
         method: 'GET',
@@ -180,7 +198,12 @@ export function useEmailOperations() {
           'Content-Type': 'application/json',
         },
       });
-      
+
+      if (response.status === 401) {
+        await handleUnauthorized();
+        return;
+      }
+
       if (!response.ok) {
         const errorData = await response.json();
         console.error('Failed to fetch messages:', errorData);
@@ -204,6 +227,7 @@ export function useEmailOperations() {
       }
     } catch (error) {
       console.error('Error fetching messages:', error);
+      setError(error instanceof Error ? error.message : 'Error fetching messages');
     } finally {
       setLoading(false);
     }
@@ -212,6 +236,7 @@ export function useEmailOperations() {
   // Send email
   const sendEmail = async (emailForm: EmailForm) => {
     setLoading(true);
+    setError(null);
     try {
       let emailSubject = emailForm.subject;
       let emailBody = emailForm.body;
@@ -242,6 +267,11 @@ export function useEmailOperations() {
         })
       });
 
+      if (response.status === 401) {
+        await handleUnauthorized();
+        return false;
+      }
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to send email');
@@ -250,6 +280,7 @@ export function useEmailOperations() {
       return true;
     } catch (error) {
       console.error('Error sending email:', error);
+      setError(error instanceof Error ? error.message : 'Error sending email');
       return false;
     } finally {
       setLoading(false);
@@ -277,6 +308,7 @@ export function useEmailOperations() {
     } catch (error) {
       console.error('Error decrypting email:', error);
       setDecryptedContent('Error decrypting email');
+      setError('Error decrypting email');
     } finally {
       setDecryptLoading(false);
     }
@@ -402,6 +434,7 @@ export function useEmailOperations() {
     smartRefresh,
     checkForNewMessages,
     hasNewMessages,
-    lastCheckTime
+    lastCheckTime,
+    error,
   };
 }
