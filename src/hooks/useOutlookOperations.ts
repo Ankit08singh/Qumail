@@ -19,25 +19,42 @@ export function useOutlookOperations(accessToken: string | undefined) {
     if (isJunk) {
       labels.push('SPAM');
     }
+
+    const bodyContent = outlookMsg.body?.content || '';
+    const subject = outlookMsg.subject || '(No subject)';
+    
+    // Detect encryption markers (same logic as Gmail)
+    const isEncrypted = (
+      subject.includes('[Encrypted]') ||
+      subject.includes('[Quantum Encrypted]') ||
+      bodyContent.includes('--- ENCRYPTED METADATA ---') ||
+      bodyContent.includes('--- ENCRYPTED PAYLOAD ---') ||
+      bodyContent.includes('[AES ENCRYPTED]') ||
+      bodyContent.includes('[QKD ENCRYPTED]') ||
+      bodyContent.includes('[AES-GCM ENCRYPTED]') ||
+      bodyContent.includes('[AES STANDARD ENCRYPTED]') ||
+      bodyContent.includes('[OTP ENCRYPTED]') ||
+      bodyContent.includes('[PQC ENCRYPTED]')
+    );
     
     return {
       id: outlookMsg.id,
       threadId: outlookMsg.id,
       snippet: outlookMsg.bodyPreview,
       sender: outlookMsg.from?.emailAddress?.address || '',
-      subject: outlookMsg.subject || '(No subject)',
+      subject: subject,
       to: outlookMsg.toRecipients?.[0]?.emailAddress?.address || '',
-      body: outlookMsg.body?.content || '',
-      bodyContent: outlookMsg.body?.content || '',
+      body: bodyContent,
+      bodyContent: bodyContent,
       internalDate: new Date(outlookMsg.receivedDateTime).getTime().toString(),
       labelIds: labels,
-      isEncrypted: false,
-      displaySubject: outlookMsg.subject || '(No subject)',
+      isEncrypted: isEncrypted,
+      displaySubject: subject.replace(/🔐\s*/, '').replace(/\s*\[.*?Encrypted\]$/g, '') || '(No subject)',
       payload: {
         headers: [
           { name: 'From', value: outlookMsg.from?.emailAddress?.address },
           { name: 'To', value: outlookMsg.toRecipients?.[0]?.emailAddress?.address },
-          { name: 'Subject', value: outlookMsg.subject },
+          { name: 'Subject', value: subject },
         ],
       },
     };
