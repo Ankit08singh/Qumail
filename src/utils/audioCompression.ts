@@ -1,32 +1,27 @@
 import pako from 'pako';
 
 /**
- * SENDER SIDE: Convert buffer audio to base64 and then gzip it
+ * SENDER SIDE: Direct gzip compression of binary audio data
  * @param audioBuffer - The audio buffer (ArrayBuffer or Uint8Array)
- * @returns Compressed and encoded audio data as base64 string
+ * @returns Compressed audio data as base64 string
  */
 export function compressAudioForSender(audioBuffer: ArrayBuffer | Uint8Array): string {
   try {
     // Convert to Uint8Array if it's an ArrayBuffer
     const uint8Array = audioBuffer instanceof ArrayBuffer ? new Uint8Array(audioBuffer) : audioBuffer;
     
-    // Step 1: Convert buffer to base64
-    const base64String = Buffer.from(uint8Array).toString('base64');
+    // Step 1: Direct gzip compression of binary data
+    const gzippedBytes = pako.gzip(uint8Array);
     
-    // Step 2: Gzip the base64 string
-    const textEncoder = new TextEncoder();
-    const base64Bytes = textEncoder.encode(base64String);
-    const gzippedBytes = pako.gzip(base64Bytes);
-    
-    // Step 3: Convert gzipped data to base64 for JSON transmission
+    // Step 2: Convert gzipped data to base64 for JSON transmission
     const compressedBase64 = Buffer.from(gzippedBytes).toString('base64');
     
-    console.log('Audio compression stats:', {
+    console.log('Audio compression stats (optimized):', {
       originalSize: uint8Array.length,
-      base64Size: base64String.length,
       compressedSize: gzippedBytes.length,
       finalSize: compressedBase64.length,
-      compressionRatio: ((uint8Array.length - gzippedBytes.length) / uint8Array.length * 100).toFixed(2) + '%'
+      compressionRatio: ((uint8Array.length - gzippedBytes.length) / uint8Array.length * 100).toFixed(2) + '%',
+      transmissionOverhead: ((compressedBase64.length - gzippedBytes.length) / gzippedBytes.length * 100).toFixed(2) + '%'
     });
     
     return compressedBase64;
@@ -37,13 +32,13 @@ export function compressAudioForSender(audioBuffer: ArrayBuffer | Uint8Array): s
 }
 
 /**
- * RECEIVER SIDE: Receive JSON, ungzip it, convert base64 to binary buffer
+ * RECEIVER SIDE: Receive JSON, ungzip directly to binary buffer
  * @param compressedBase64 - The compressed base64 string from sender
  * @returns Audio data as binary buffer (Uint8Array)
  */
 export function decompressAudioForReceiver(compressedBase64: string): Uint8Array {
   try {
-    console.log('=== DECOMPRESSION START ===');
+    console.log('=== DECOMPRESSION START (OPTIMIZED) ===');
     console.log('Input compressedBase64 length:', compressedBase64.length);
     console.log('Input compressedBase64 preview:', compressedBase64.substring(0, 100) + '...');
     
@@ -51,28 +46,17 @@ export function decompressAudioForReceiver(compressedBase64: string): Uint8Array
     const compressedBytes = Buffer.from(compressedBase64, 'base64');
     console.log('Compressed bytes length:', compressedBytes.length);
     
-    // Step 2: Ungzip the data
-    const decompressedBytes = pako.ungzip(compressedBytes);
-    console.log('Decompressed bytes length:', decompressedBytes.length);
+    // Step 2: Direct ungzip to binary data
+    const audioData = pako.ungzip(compressedBytes);
+    console.log('Decompressed audio bytes length:', audioData.length);
     
-    // Step 3: Convert decompressed bytes back to base64 string
-    const textDecoder = new TextDecoder();
-    const originalBase64 = textDecoder.decode(decompressedBytes);
-    console.log('Original base64 string length:', originalBase64.length);
-    console.log('Original base64 preview:', originalBase64.substring(0, 100) + '...');
-    
-    // Step 4: Convert base64 back to binary buffer (native format)
-    const audioBuffer = Buffer.from(originalBase64, 'base64');
-    console.log('Final audio buffer length:', audioBuffer.length);
-    
-    console.log('=== DECOMPRESSION STATS ===');
+    console.log('=== DECOMPRESSION STATS (OPTIMIZED) ===');
     console.log('Compressed size:', compressedBytes.length);
-    console.log('Decompressed size:', decompressedBytes.length);
-    console.log('Final audio size:', audioBuffer.length);
-    console.log('Compression ratio:', ((compressedBytes.length / audioBuffer.length) * 100).toFixed(2) + '%');
+    console.log('Final audio size:', audioData.length);
+    console.log('Compression ratio:', ((compressedBytes.length / audioData.length) * 100).toFixed(2) + '%');
     console.log('=== DECOMPRESSION END ===');
     
-    return new Uint8Array(audioBuffer);
+    return audioData;
   } catch (error) {
     console.error('Error decompressing audio:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
