@@ -2,11 +2,14 @@ import { signIn, getSession } from "next-auth/react";
 import { GetServerSideProps } from "next";
 import Link from "next/link";
 import { useState } from "react";
-import { ArrowLeft, Lock, ChevronLeft } from "lucide-react";
+import { ArrowLeft, Lock, ChevronLeft, Mail } from "lucide-react";
 import Image from "next/image";
+import { useRouter } from "next/router";
 
 export default function Login() {
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingMicrosoft, setIsLoadingMicrosoft] = useState(false);
 
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
@@ -17,6 +20,21 @@ export default function Login() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleMicrosoftSignIn = async () => {
+    setIsLoadingMicrosoft(true);
+    try {
+      await signIn("azure-ad", { callbackUrl: "/dashboard" });
+    } catch (error) {
+      console.error("Microsoft sign in error:", error);
+    } finally {
+      setIsLoadingMicrosoft(false);
+    }
+  };
+
+  const handleYahooSignIn = () => {
+    router.push("/connect-yahoo");
   };
 
   return (
@@ -109,8 +127,63 @@ export default function Login() {
                 <div className="w-full border-t border-gray-700" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-gray-900 text-gray-400 rounded-full">Secure Authentication</span>
+                <span className="px-4 bg-gray-900 text-gray-400 rounded-full">Or</span>
               </div>
+            </div>
+
+            {/* Microsoft Sign In Button */}
+            <div>
+              <button
+                onClick={handleMicrosoftSignIn}
+                disabled={isLoadingMicrosoft}
+                className="group relative w-full flex justify-center py-3 sm:py-4 px-6 bg-gray-700 hover:bg-gray-600 rounded-xl sm:rounded-2xl shadow-xl hover:shadow-2xl focus:outline-none focus:ring-2 focus:ring-gray-500/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 border border-gray-500/30"
+              >
+                <div className="relative flex items-center">
+                  {isLoadingMicrosoft ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-3 h-6 w-6 text-white" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      <span className="font-semibold text-white text-lg">Authenticating...</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-6 h-6 mr-4" viewBox="0 0 23 23">
+                        <path fill="#f3f3f3" d="M0 0h23v23H0z"/>
+                        <path fill="#f35325" d="M1 1h10v10H1z"/>
+                        <path fill="#81bc06" d="M12 1h10v10H12z"/>
+                        <path fill="#05a6f0" d="M1 12h10v10H1z"/>
+                        <path fill="#ffba08" d="M12 12h10v10H12z"/>
+                      </svg>
+                      <span className="font-semibold text-white text-lg">Continue with Microsoft</span>
+                    </>
+                  )}
+                </div>
+              </button>
+            </div>
+
+            {/* Divider */}
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-700" />
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-4 bg-gray-900 text-gray-400 rounded-full">Or</span>
+              </div>
+            </div>
+
+            {/* Yahoo Sign In Button */}
+            <div>
+              <button
+                onClick={handleYahooSignIn}
+                className="group relative w-full flex justify-center py-3 sm:py-4 px-6 bg-purple-600 hover:bg-purple-500 rounded-xl sm:rounded-2xl shadow-xl hover:shadow-2xl focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all duration-300 border border-purple-400/30"
+              >
+                <div className="relative flex items-center">
+                  <Mail className="w-6 h-6 mr-4 text-white" />
+                  <span className="font-semibold text-white text-lg">Continue with Yahoo Mail</span>
+                </div>
+              </button>
             </div>
 
 

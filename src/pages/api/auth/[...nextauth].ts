@@ -1,6 +1,7 @@
 // /pages/api/auth/[...nextauth].ts
 import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
+import AzureADProvider from "next-auth/providers/azure-ad";
 
 const GOOGLE_AUTHORIZATION_PARAMS = {
   // request Gmail scopes and offline access (refresh token)
@@ -60,54 +61,32 @@ export const authOptions = {
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
       authorization: { params: GOOGLE_AUTHORIZATION_PARAMS }
     }),
+    AzureADProvider({
+      clientId: process.env.AZURE_AD_CLIENT_ID!,
+      clientSecret: process.env.AZURE_AD_CLIENT_SECRET!,
+      tenantId: process.env.AZURE_AD_TENANT_ID!,
+      authorization: {
+        params: {
+          scope: "openid email profile offline_access Mail.Read Mail.ReadWrite Mail.Send",
+        },
+      },
+    }),
   ],
   secret: process.env.NEXTAUTH_SECRET,
-
-  cookies: {
-    sessionToken: {
-      name: process.env.NODE_ENV === 'production' 
-        ? '__Secure-next-auth.session-token' 
-        : 'next-auth.session-token',
-      options: {
-        httpOnly: true,
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',  
-        path: '/',
-        secure: process.env.NODE_ENV === 'production',  
-      },
-      callbackUrl: {
-        name: process.env.NODE_ENV === 'production'
-          ? '__Secure-next-auth.callback-url'
-          : 'next-auth.callback-url',
-        options: {
-          httpOnly: true,
-          sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',  
-          path: '/',
-          secure: process.env.NODE_ENV === 'production',  
-        },
-      },
-      csrfToken: {
-        name: process.env.NODE_ENV === 'production'
-          ? '__Host-next-auth.csrf-token'
-          : 'next-auth.csrf-token',
-        options: {
-          httpOnly: true,
-          sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',  
-          secure: process.env.NODE_ENV === 'production',  
-        },
-      },
-    },
-  },
+  
+  debug: true, // Enable debug mode
 
   callbacks: {
     // Persist tokens in the JWT
     async jwt({ token, account }: any) {
       // first sign in
       if (account) {
+        console.log('Account received:', account.provider);
         return {
           ...token,
           accessToken: account.access_token,
-          refreshToken: account.refresh_token, // may be undefined if not returned
-          // account.expires_at is seconds since epoch (sometimes present)
+          refreshToken: account.refresh_token,
+          provider: account.provider,
           accessTokenExpires: account.expires_at
             ? account.expires_at * 1000
             : Date.now() + (account.expires_in ?? 3600) * 1000,
@@ -119,14 +98,19 @@ export const authOptions = {
         return token;
       }
 
-      // Access token expired — refresh it
-      return await refreshAccessToken(token);
+      // Access token expired — refresh it (only for Google)
+      if (token.provider === 'google') {
+        return await refreshAccessToken(token);
+      }
+
+      return token;
     },
 
-    // Make tokens available in `session`
+    // Make tokens available in session
     async session({ session, token }: any) {
       session.accessToken = token.accessToken;
       session.refreshToken = token.refreshToken;
+      session.provider = token.provider;
       session.error = token.error;
       return session;
     },

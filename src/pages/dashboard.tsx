@@ -8,10 +8,12 @@ import Sidebar from '@/components/dashboard/Sidebar';
 import EmailList from '@/components/dashboard/EmailList';
 import ComposeModal from '@/components/dashboard/ComposeModal';
 import { useEmailOperations, EmailForm, GmailMessage } from '@/hooks/useEmailOperations';
+import { useOutlookOperations } from '@/hooks/useOutlookOperations';
 import API from '@/utils/axios';
 
 export default function Dashboard() {
   const { data: session } = useSession();
+  const provider = (session as any)?.provider || 'google';
   const [activeView, setActiveView] = useState('inbox');
   const [searchQuery, setSearchQuery] = useState('');
   const [sendingEmail, setSendingEmail] = useState(false);
@@ -30,7 +32,11 @@ export default function Dashboard() {
     type: 'QKD'
   });
 
-  // Use email operations hook
+  // Use appropriate email operations hook based on provider
+  const gmailOps = useEmailOperations();
+  const outlookOps = useOutlookOperations((session as any)?.accessToken);
+
+  // Select the appropriate operations based on provider
   const {
     messages,
     loading,
@@ -49,7 +55,21 @@ export default function Dashboard() {
     hasNewMessages,
     lastCheckTime,
     error
-  } = useEmailOperations();
+  } = provider === 'azure-ad' ? {
+    ...outlookOps,
+    decryptLoading: false,
+    decryptedContent: null,
+    decryptEmail: async () => {},
+    starEmail: async () => {},
+    archiveEmail: async () => {},
+    deleteEmail: async () => {},
+    unarchiveEmail: async () => {},
+    restoreEmail: async () => {},
+    smartRefresh: async () => {},
+    checkForNewMessages: async () => false,
+    hasNewMessages: false,
+    lastCheckTime: Date.now(),
+  } : gmailOps;
 
   // Update activeView ref when it changes
   useEffect(() => {
@@ -84,7 +104,8 @@ export default function Dashboard() {
       const isDeleted = message.labelIds?.includes('TRASH') || message.labelIds?.includes('DELETED');
       const isArchived = message.labelIds?.includes('ARCHIVE') || message.labelIds?.includes('ARCHIVED');
       const isStarred = message.labelIds?.includes('STARRED');
-      const isSent = senderEmail === userEmail;
+      // For Outlook, use SENT label; for Gmail, compare sender email
+      const isSent = provider === 'azure-ad' ? message.labelIds?.includes('SENT') : senderEmail === userEmail;
 
       if (isDeleted) {
         counts.trash++;
@@ -111,14 +132,16 @@ export default function Dashboard() {
     const senderEmail = extractEmail(message.sender || '');
     const isDeleted = message.labelIds?.includes('TRASH') || message.labelIds?.includes('DELETED');
     const isArchived = message.labelIds?.includes('ARCHIVE') || message.labelIds?.includes('ARCHIVED');
-    return senderEmail !== userEmail && !isDeleted && !isArchived;
+    const isSent = provider === 'azure-ad' ? message.labelIds?.includes('SENT') : senderEmail === userEmail;
+    return !isSent && !isDeleted && !isArchived;
   });
 
   const sentMessages = messages.filter((message) => {
     const senderEmail = extractEmail(message.sender || '');
     const isDeleted = message.labelIds?.includes('TRASH') || message.labelIds?.includes('DELETED');
     const isArchived = message.labelIds?.includes('ARCHIVE') || message.labelIds?.includes('ARCHIVED');
-    return senderEmail === userEmail && !isDeleted && !isArchived;
+    const isSent = provider === 'azure-ad' ? message.labelIds?.includes('SENT') : senderEmail === userEmail;
+    return isSent && !isDeleted && !isArchived;
   });
 
   // Debug logging (can be removed in production)
@@ -135,7 +158,8 @@ export default function Dashboard() {
     const isDeleted = message.labelIds?.includes('TRASH') || message.labelIds?.includes('DELETED');
     const isArchived = message.labelIds?.includes('ARCHIVE') || message.labelIds?.includes('ARCHIVED');
     const isStarred = message.labelIds?.includes('STARRED');
-    const isSent = senderEmail === userEmail;
+    // For Outlook, use SENT label; for Gmail, compare sender email
+    const isSent = provider === 'azure-ad' ? message.labelIds?.includes('SENT') : senderEmail === userEmail;
 
     // Don't show deleted emails in any tab except trash
     if (isDeleted && activeView !== 'trash') {
@@ -187,17 +211,31 @@ export default function Dashboard() {
     e.preventDefault();
     setSendingEmail(true);
     try {
-      const res = await API.post('/auth/send-encrypted-email', emailForm);
-      console.log("Email sent successfully:", res);
-      alert('Email sent successfully!');
+      if (provider === 'azure-ad') {
+        // Send via Outlook - use the Outlook-specific sendEmail
+        await outlookOps.sendEmail({
+          to: emailForm.to,
+          subject: emailForm.subject,
+          body: emailForm.body,
+          isHtml: emailForm.isHtml,
+        });
+        console.log("Outlook email sent successfully");
+        alert('Email sent successfully!');
+      } else {
+        // Send via Gmail (existing logic)
+        const res = await API.post('/auth/send-encrypted-email', emailForm);
+        console.log("Gmail email sent successfully:", res);
+        alert('Email sent successfully!');
+      }
+      
       setEmailForm({ to: '', subject: '', body: '', isHtml: false, type: 'AES' });
       setShowCompose(false);
       setActiveView('inbox');
       // Refresh messages to show the sent email
       await fetchMessages();
     } catch (err: any) {
-      console.log("Failed to send email:", err.message);
-      alert('Failed to send email: ' + err.message);
+      console.error("Failed to send email:", err);
+      alert('Failed to send email: ' + (err.message || 'Unknown error'));
     } finally {
       setSendingEmail(false);
     }
@@ -220,12 +258,16 @@ export default function Dashboard() {
       // Only check for new messages when on inbox or sent tabs
       const currentView = activeViewRef.current;
       if (currentView === 'inbox' || currentView === 'sent') {
-        checkForNewMessages();
+        if (provider === 'azure-ad' && outlookOps.checkForNewMessages) {
+          outlookOps.checkForNewMessages();
+        } else {
+          checkForNewMessages();
+        }
       }
     }, 30000); // Check every 30 seconds
 
     return () => clearInterval(checkInterval);
-  }, [session, checkForNewMessages]);
+  }, [session, checkForNewMessages, provider, outlookOps]);
 
   if (!session) {
     return (

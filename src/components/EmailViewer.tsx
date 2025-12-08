@@ -54,13 +54,29 @@ interface EmailViewerProps {
   onArchiveEmail: (emailId: string) => void;
   onDeleteEmail: (emailId: string) => void;
   activeView?: string;
+  onDecryptEmail?: (email: GmailMessage) => void;
+  decryptLoading?: boolean;
+  decryptedContent?: string | null;
 }
 
-const EmailViewer: React.FC<EmailViewerProps> = ({ email, onBack, onStarEmail, onArchiveEmail, onDeleteEmail, activeView }) => {
-  // State for decryption
-  const [decryptLoading, setDecryptLoading] = useState(false);
-  const [decryptedContent, setDecryptedContent] = useState<string | null>(null);
+const EmailViewer: React.FC<EmailViewerProps> = ({ 
+  email, 
+  onBack, 
+  onStarEmail, 
+  onArchiveEmail, 
+  onDeleteEmail, 
+  activeView,
+  onDecryptEmail,
+  decryptLoading: externalDecryptLoading,
+  decryptedContent: externalDecryptedContent
+}) => {
+  // Use external decrypt state if provided, otherwise use local state (for backward compatibility)
+  const [localDecryptLoading, setLocalDecryptLoading] = useState(false);
+  const [localDecryptedContent, setLocalDecryptedContent] = useState<string | null>(null);
   const [emailBodyContent, setEmailBodyContent] = useState<string>(email.bodyContent || email.body || '');
+  
+  const decryptLoading = externalDecryptLoading !== undefined ? externalDecryptLoading : localDecryptLoading;
+  const decryptedContent = externalDecryptedContent !== undefined ? externalDecryptedContent : localDecryptedContent;
 
   // Extract encrypted data from email body
   const extractEncryptedData = (emailBody: string) => {
@@ -85,8 +101,15 @@ const EmailViewer: React.FC<EmailViewerProps> = ({ email, onBack, onStarEmail, o
   const decryptEmail = async () => {
     if (!email || !email.isEncrypted) return;
 
+    // Use external decrypt function if provided
+    if (onDecryptEmail) {
+      onDecryptEmail(email);
+      return;
+    }
+
+    // Otherwise use local decrypt logic (backward compatibility)
     try {
-      setDecryptLoading(true);
+      setLocalDecryptLoading(true);
 
       console.log('🔓 Extracting encrypted data...');
       console.log('📝 Body content preview:', email.bodyContent?.substring(0, 200));
@@ -114,7 +137,7 @@ const EmailViewer: React.FC<EmailViewerProps> = ({ email, onBack, onStarEmail, o
         const message = response.data.message;
         // Convert to string if it's an object
         const messageText = typeof message === 'string' ? message : JSON.stringify(message, null, 2);
-        setDecryptedContent(messageText);
+        setLocalDecryptedContent(messageText);
         // Update the email body content to show decrypted message
         setEmailBodyContent(messageText);
         console.log('✅ Decryption successful!', response.data);
@@ -126,7 +149,7 @@ const EmailViewer: React.FC<EmailViewerProps> = ({ email, onBack, onStarEmail, o
       console.error('❌ Decryption failed:', error);
       alert('Failed to decrypt email: ' + (error as Error).message);
     } finally {
-      setDecryptLoading(false);
+      setLocalDecryptLoading(false);
     }
   };
 
