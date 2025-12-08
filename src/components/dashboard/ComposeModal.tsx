@@ -1,4 +1,4 @@
-import { ArrowLeft, X, Save, Send, Loader2, Paperclip, Mic, FileText, Image as ImageIcon, StopCircle, Play } from "lucide-react";
+import { ArrowLeft, X, Save, Send, Loader2, Paperclip, Mic, FileText, Image as ImageIcon, StopCircle, Play, Key, RefreshCw, Shield } from "lucide-react";
 import SecurityPanel from "./SecurityPanel";
 import { useState, useEffect, useRef } from "react";
 
@@ -36,6 +36,10 @@ export default function ComposeModal({
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const [recordingTime, setRecordingTime] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [keySize, setKeySize] = useState<number>(1); // in KB
+  const [generatingKey, setGeneratingKey] = useState(false);
+  const [generatedKey, setGeneratedKey] = useState<string | null>(null);
+  const [keyError, setKeyError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!audioBlob) {
@@ -176,8 +180,8 @@ export default function ComposeModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4">
-      <div className="bg-gray-900 border border-gray-700 rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-7xl max-h-[98vh] sm:max-h-[95vh] overflow-hidden flex flex-col lg:flex-row">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-0 sm:p-4">
+      <div className="bg-gray-900 border-0 sm:border border-gray-700 rounded-none sm:rounded-2xl shadow-2xl w-full h-full sm:h-auto sm:w-[95vw] max-w-7xl sm:max-h-[95vh] flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden">
         {/* Left Side - New Message */}
         <div className="flex-1 flex flex-col min-h-0">
           {/* Compose Header */}
@@ -205,8 +209,8 @@ export default function ComposeModal({
           </div>
 
           {/* Compose Form */}
-          <div className="flex-1 overflow-y-auto min-h-0">
-            <form onSubmit={onSend} className="p-3 sm:p-4 lg:p-6 space-y-3 sm:space-y-4">
+          <div className="flex-1 overflow-y-auto min-h-0 overscroll-contain">
+            <form onSubmit={onSend} className="p-3 sm:p-4 lg:p-6 space-y-3 sm:space-y-4 pb-24 sm:pb-20">
               <div>
                 <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1.5 sm:mb-2">To</label>
                 <input
@@ -217,6 +221,32 @@ export default function ComposeModal({
                   placeholder="recipient@example.com"
                   required
                 />
+              </div>
+
+              {/* Security Level Selector - Mobile & Desktop */}
+              <div>
+                <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1.5 sm:mb-2 flex items-center gap-2">
+                  <Shield className="w-4 h-4 text-blue-400" />
+                  <span>Encryption Type</span>
+                </label>
+                <select
+                  value={emailForm.type}
+                  onChange={(e) => handleInputChange('type', e.target.value as EncryptionType)}
+                  className="w-full bg-gray-800 border border-gray-600 rounded-lg px-2.5 sm:px-3 py-2 sm:py-2.5 text-sm sm:text-base text-white focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none cursor-pointer"
+                  style={{
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%239CA3AF' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E")`,
+                    backgroundPosition: 'right 0.5rem center',
+                    backgroundRepeat: 'no-repeat',
+                    backgroundSize: '1.5em 1.5em',
+                    paddingRight: '2.5rem'
+                  }}
+                >
+                  <option value="OTP" className="bg-gray-800 py-2">🔐 Quantum Secure (OTP)</option>
+                  <option value="QKD" className="bg-gray-800 py-2">⚡ Quantum-Aided AES</option>
+                  <option value="PQC" className="bg-gray-800 py-2">🛡️ Post-Quantum</option>
+                  <option value="AES" className="bg-gray-800 py-2">🔒 AES Standard</option>
+                  <option value="None" className="bg-gray-800 py-2">📧 Standard</option>
+                </select>
               </div>
 
               <div>
@@ -230,6 +260,91 @@ export default function ComposeModal({
                   required
                 />
               </div>
+
+              {/* Key Size Selector - Show for OTP and QKD only */}
+              {(emailForm.type === 'OTP' || emailForm.type === 'QKD') && (
+                <div className="bg-gray-800/70 border border-gray-700 rounded-xl p-3 sm:p-4 space-y-3 sm:space-y-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex flex-col gap-1">
+                      <label className="text-sm font-semibold text-white flex items-center space-x-2">
+                        <Key className={`w-4 h-4 ${emailForm.type === 'OTP' ? 'text-green-400' : 'text-blue-400'}`} />
+                        <span>Quantum Key Size</span>
+                      </label>
+                      <p className="text-xs text-gray-400 leading-relaxed">
+                        Select key length for encryption. Larger keys = stronger security.
+                      </p>
+                    </div>
+                    <span className={`text-sm font-bold ${emailForm.type === 'OTP' ? 'text-green-400' : 'text-blue-400'} whitespace-nowrap`}>
+                      {keySize} KB<br />({keySize * 1024} bits)
+                    </span>
+                  </div>
+
+                  <div className="space-y-2">
+                    <input
+                      type="range"
+                      min="1"
+                      max="100"
+                      value={keySize}
+                      onChange={(e) => setKeySize(Number(e.target.value))}
+                      className={`w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer ${emailForm.type === 'OTP' ? 'accent-green-500' : 'accent-blue-500'}`}
+                    />
+                    <div className="flex justify-between text-xs text-gray-400">
+                      <span>1 KB</span>
+                      <span>100 KB</span>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      setGeneratingKey(true);
+                      setKeyError(null);
+                      try {
+                        const response = await fetch('/auth/generate', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ keySize: keySize * 1024 })
+                        });
+                        if (!response.ok) throw new Error('Key generation failed');
+                        const data = await response.json();
+                        setGeneratedKey(data.key || 'Key generated successfully');
+                      } catch (error) {
+                        setKeyError(error instanceof Error ? error.message : 'Failed to generate key');
+                      } finally {
+                        setGeneratingKey(false);
+                      }
+                    }}
+                    disabled={generatingKey}
+                    className={`w-full flex items-center justify-center gap-2 ${emailForm.type === 'OTP' ? 'bg-green-600 hover:bg-green-500' : 'bg-blue-600 hover:bg-blue-500'} disabled:bg-gray-600 text-white px-4 py-2.5 rounded-lg transition-colors text-sm font-semibold`}
+                  >
+                    {generatingKey ? (
+                      <>
+                        <RefreshCw className="w-4 h-4 animate-spin" />
+                        <span>Generating...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Key className="w-4 h-4" />
+                        <span>Generate Key</span>
+                      </>
+                    )}
+                  </button>
+
+                  {generatedKey && (
+                    <div className={`border ${emailForm.type === 'OTP' ? 'border-green-500/30 bg-green-900/20' : 'border-blue-500/30 bg-blue-900/20'} rounded-lg p-3`}>
+                      <p className={`text-xs ${emailForm.type === 'OTP' ? 'text-green-400' : 'text-blue-400'} font-mono break-all`}>
+                        {generatedKey.substring(0, 60)}...
+                      </p>
+                    </div>
+                  )}
+
+                  {keyError && (
+                    <div className="bg-red-900/20 border border-red-500/40 rounded-lg p-3">
+                      <p className="text-xs text-red-400">{keyError}</p>
+                    </div>
+                  )}
+                </div>
+              )}
 
               <div>
                 <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1.5 sm:mb-2">Message</label>
@@ -309,9 +424,9 @@ export default function ComposeModal({
               )}
 
               {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0 pt-3 sm:pt-4 border-t border-gray-700">
-                <div className="flex items-center space-x-2">
-                  <div className="text-xs sm:text-sm text-gray-400">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0 pt-3 sm:pt-4 border-t border-gray-700">
+                <div className="flex items-center space-x-2 flex-wrap">
+                  <div className="text-xs sm:text-sm text-gray-400 whitespace-nowrap">
                     {emailForm.body.length} / 12000 char
                   </div>
                   
@@ -402,8 +517,8 @@ export default function ComposeModal({
           </div>
         </div>
 
-        {/* Right Side - Security Panel - Hidden on mobile, shown on lg+ */}
-        <div className="hidden lg:block">
+        {/* Security Panel - stacks below on mobile, sidebar on desktop */}
+        <div className="w-full lg:w-80 xl:w-96 flex-shrink-0">
           <SecurityPanel 
             selectedType={emailForm.type}
             onTypeChange={(type) => handleInputChange('type', type)}
