@@ -117,7 +117,7 @@ export function useOutlookOperations(accessToken: string | undefined) {
     }
   };
 
-  const sendEmail = async (emailForm: { to: string; subject: string; body: string; isHtml?: boolean; type?: string }) => {
+  const sendEmail = async (emailForm: { to: string[]; subject: string; body: string; isHtml?: boolean; type?: string }) => {
     if (!accessToken) {
       throw new Error('No access token available');
     }
