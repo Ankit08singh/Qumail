@@ -211,22 +211,10 @@ export default function Dashboard() {
     e.preventDefault();
     setSendingEmail(true);
     try {
-      if (provider === 'azure-ad') {
-        // Send via Outlook - use the Outlook-specific sendEmail
-        await outlookOps.sendEmail({
-          to: emailForm.to,
-          subject: emailForm.subject,
-          body: emailForm.body,
-          isHtml: emailForm.isHtml,
-        });
-        console.log("Outlook email sent successfully");
-        alert('Email sent successfully!');
-      } else {
-        // Send via Gmail (existing logic)
-        const res = await API.post('/auth/send-encrypted-email', emailForm);
-        console.log("Gmail email sent successfully:", res);
-        alert('Email sent successfully!');
-      }
+      // Both Gmail and Outlook now use the same backend endpoint
+      const res = await API.post('/auth/send-encrypted-email', emailForm);
+      console.log("Email sent successfully via backend:", res);
+      alert('Email sent successfully!');
       
       setEmailForm({ to: '', subject: '', body: '', isHtml: false, type: 'AES' });
       setShowCompose(false);
