@@ -26,7 +26,7 @@ export default function Dashboard() {
   const activeViewRef = useRef(activeView);
   // Email form state
   const [emailForm, setEmailForm] = useState<EmailForm>({
-    to: '',
+    to: [],
     subject: '',
     body: '',
     isHtml: false,
@@ -228,7 +228,7 @@ export default function Dashboard() {
       if (provider === 'azure-ad') {
         // Send via Outlook - use the Outlook-specific sendEmail
         await outlookOps.sendEmail({
-          to: emailForm.to,
+          to: emailForm.to.join(', '),
           subject: emailForm.subject,
           body: finalBody,
           isHtml: emailForm.isHtml,
@@ -243,7 +243,7 @@ export default function Dashboard() {
         alert('Email sent successfully!');
       }
       
-      setEmailForm({ to: '', subject: '', body: '', isHtml: false, type: 'AES' });
+      setEmailForm({ to: [], subject: '', body: '', isHtml: false, type: 'AES' });
       setShowCompose(false);
       setActiveView('inbox');
       // Refresh messages to show the sent email

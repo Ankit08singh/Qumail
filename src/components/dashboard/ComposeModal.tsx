@@ -1,5 +1,6 @@
 import { ArrowLeft, X, Save, Send, Loader2, Paperclip, Mic, FileText, Image as ImageIcon, StopCircle, Play, Key, RefreshCw, Shield } from "lucide-react";
 import SecurityPanel from "./SecurityPanel";
+import RecipientInput from "./RecipientInput";
 import { useState, useEffect, useRef } from "react";
 import { blobToArrayBuffer, compressAudioForSender } from "@/utils/audioCompression";
 import { compressMultipleFiles, CompressedFile, formatFileSize } from "@/utils/fileCompression";
@@ -7,7 +8,7 @@ import { compressMultipleFiles, CompressedFile, formatFileSize } from "@/utils/f
 type EncryptionType = 'AES' | 'QKD' | 'OTP' | 'PQC' | 'None';
 
 interface EmailForm {
-  to: string;
+  to: string[];
   subject: string;
   body: string;
   isHtml: boolean;
@@ -79,8 +80,12 @@ export default function ComposeModal({
 
   if (!isOpen) return null;
 
-  const handleInputChange = (field: keyof EmailForm, value: string | EncryptionType) => {
+  const handleInputChange = (field: keyof EmailForm, value: string | EncryptionType | string[]) => {
     onFormChange({ ...emailForm, [field]: value });
+  };
+
+  const handleRecipientsChange = (recipients: string[]) => {
+    onFormChange({ ...emailForm, to: recipients });
   };
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -282,13 +287,10 @@ export default function ComposeModal({
             <form onSubmit={handleFormSubmit} className="p-3 sm:p-4 lg:p-6 space-y-3 sm:space-y-4 pb-24 sm:pb-20">
               <div>
                 <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1.5 sm:mb-2">To</label>
-                <input
-                  type="email"
-                  value={emailForm.to}
-                  onChange={(e) => handleInputChange('to', e.target.value)}
-                  className="w-full bg-gray-800 border border-gray-600 rounded-lg px-2.5 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="recipient@example.com"
-                  required
+                <RecipientInput
+                  recipients={emailForm.to}
+                  onChange={handleRecipientsChange}
+                  placeholder="Add recipients..."
                 />
               </div>
 
@@ -570,7 +572,7 @@ export default function ComposeModal({
                   
                   <button
                     type="submit"
-                    disabled={loading || !emailForm.to.trim() || !emailForm.subject.trim()}
+                    disabled={loading || emailForm.to.length === 0 || !emailForm.subject.trim()}
                     className="flex-1 sm:flex-none px-4 sm:px-6 py-2 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg transition-colors flex items-center justify-center space-x-1.5 sm:space-x-2 text-sm sm:text-base"
                   >
                     {loading ? (
