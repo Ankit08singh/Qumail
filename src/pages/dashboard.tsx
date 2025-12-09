@@ -212,33 +212,19 @@ export default function Dashboard() {
     e.preventDefault();
     setSendingEmail(true);
     try {
-      // Prepare email body with attachments
-      let finalBody = emailForm.body;
-      
-      // Add audio data if present
-      if (audioData) {
-        finalBody = `${finalBody}\n\nAUDIO_COMPRESSED:${audioData}`;
-      }
-      
-      // Add file attachments if present
-      if (filesData && filesData.length > 0) {
-        finalBody = `${finalBody}\n\nFILES_COMPRESSED:${JSON.stringify(filesData)}`;
-      }
-
       if (provider === 'azure-ad') {
         // Send via Outlook - use the Outlook-specific sendEmail
         await outlookOps.sendEmail({
-          to: emailForm.to.join(', '),
+          to: emailForm.to,
           subject: emailForm.subject,
-          body: finalBody,
+          body: emailForm.body,
           isHtml: emailForm.isHtml,
         });
         console.log("Outlook email sent successfully");
         alert('Email sent successfully!');
       } else {
         // Send via Gmail (existing logic)
-        const emailData = { ...emailForm, body: finalBody };
-        const res = await API.post('/auth/send-encrypted-email', emailData);
+        const res = await API.post('/auth/send-encrypted-email', emailForm);
         console.log("Gmail email sent successfully:", res);
         alert('Email sent successfully!');
       }
