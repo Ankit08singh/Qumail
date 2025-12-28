@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { Search, User, ArrowLeft, LogOut, ChevronDown, Menu } from "lucide-react";
+import { Search, User, ArrowLeft, LogOut, ChevronDown, Menu, KeyRound } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 import Logo from "@/components/Logo";
 import { signOut, useSession } from "next-auth/react";
 import { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/router";
 
 interface TopHeaderProps {
   searchQuery: string;
@@ -13,6 +14,7 @@ interface TopHeaderProps {
 
 export default function TopHeader({ searchQuery, onSearchChange, onMenuClick }: TopHeaderProps) {
   const { data: session } = useSession();
+  const router = useRouter();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -78,6 +80,15 @@ export default function TopHeader({ searchQuery, onSearchChange, onMenuClick }: 
             <div className="hidden sm:block">
               <ThemeToggle />
             </div>
+            
+            {/* Key Manager Icon */}
+            <button
+              onClick={() => router.push('/keyManager')}
+              className="p-1.5 sm:p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              title="Key Manager"
+            >
+              <KeyRound className="w-5 h-5 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400" />
+            </button>
             
             {/* User Dropdown */}
             <div className="relative" ref={dropdownRef}>

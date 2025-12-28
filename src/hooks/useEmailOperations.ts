@@ -30,7 +30,7 @@ export interface GmailMessage {
 export type EncryptionType = 'AES' | 'QKD' | 'OTP' | 'PQC' | 'None';
 
 export interface EmailForm {
-  to: string;
+  to: string[];
   subject: string;
   body: string;
   isHtml: boolean;
@@ -261,7 +261,7 @@ export function useEmailOperations() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          to: emailForm.to,
+          to: emailForm.to.join(', '),
           subject: emailSubject,
           body: emailBody
         })

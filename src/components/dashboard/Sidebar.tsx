@@ -5,7 +5,8 @@ import {
   FileText, 
   Star, 
   Archive, 
-  Trash2, 
+  Trash2,
+  AlertOctagon,
   Settings,
   X
 } from "lucide-react";
@@ -18,6 +19,7 @@ interface SidebarProps {
   starredCount: number;
   archiveCount: number;
   trashCount: number;
+  spamCount: number;
   draftsCount: number;
   onComposeClick: () => void;
   isOpen?: boolean;
@@ -32,6 +34,7 @@ export default function Sidebar({
   starredCount,
   archiveCount,
   trashCount,
+  spamCount,
   draftsCount,
   onComposeClick,
   isOpen = true,
@@ -42,6 +45,7 @@ export default function Sidebar({
     { id: 'sent', icon: Send, label: 'Sent', count: sentCount },
     { id: 'drafts', icon: FileText, label: 'Drafts', count: draftsCount },
     { id: 'starred', icon: Star, label: 'Starred', count: starredCount },
+    { id: 'spam', icon: AlertOctagon, label: 'Spam', count: spamCount },
     { id: 'archive', icon: Archive, label: 'Archive', count: archiveCount },
     { id: 'trash', icon: Trash2, label: 'Trash', count: trashCount },
   ];

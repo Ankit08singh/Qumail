@@ -21,11 +21,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(401).json({ error: 'No session token found' });
     }
     
-    res.status(200).json({ 
-      token: sessionToken,
-      provider: (token as any).provider || 'google',
-      email: token.email
-    });
+    res.status(200).json({ token: sessionToken });
   } catch (error) {
     console.error('Error getting token:', error);
     res.status(500).json({ error: 'Internal server error' });

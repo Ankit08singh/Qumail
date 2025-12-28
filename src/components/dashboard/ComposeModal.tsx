@@ -1,11 +1,15 @@
 import { ArrowLeft, X, Save, Send, Loader2, Paperclip, Mic, FileText, Image as ImageIcon, StopCircle, Play, Key, RefreshCw, Shield } from "lucide-react";
 import SecurityPanel from "./SecurityPanel";
+import RecipientInput from "./RecipientInput";
 import { useState, useEffect, useRef } from "react";
+import { blobToArrayBuffer, compressAudioForSender } from "@/utils/audioCompression";
+import { compressMultipleFiles, CompressedFile, formatFileSize } from "@/utils/fileCompression";
+import API from "@/utils/axios";
 
 type EncryptionType = 'AES' | 'QKD' | 'OTP' | 'PQC' | 'None';
 
 interface EmailForm {
-  to: string;
+  to: string[];
   subject: string;
   body: string;
   isHtml: boolean;
@@ -18,7 +22,7 @@ interface ComposeModalProps {
   loading: boolean;
   onClose: () => void;
   onFormChange: (form: EmailForm) => void;
-  onSend: (e: React.FormEvent) => void;
+  onSend: (e: React.FormEvent, audioData?: string, filesData?: CompressedFile[]) => void;
 }
 
 export default function ComposeModal({
@@ -30,11 +34,13 @@ export default function ComposeModal({
   onSend
 }: ComposeModalProps) {
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
+  const [compressedFiles, setCompressedFiles] = useState<CompressedFile[]>([]);
   const [isRecording, setIsRecording] = useState(false);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const [recordingTime, setRecordingTime] = useState(0);
+  const [audioMimeType, setAudioMimeType] = useState<string>('audio/webm');
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [keySize, setKeySize] = useState<number>(1); // in KB
   const [generatingKey, setGeneratingKey] = useState(false);
@@ -75,22 +81,40 @@ export default function ComposeModal({
 
   if (!isOpen) return null;
 
-  const handleInputChange = (field: keyof EmailForm, value: string | EncryptionType) => {
+  const handleInputChange = (field: keyof EmailForm, value: string | EncryptionType | string[]) => {
     onFormChange({ ...emailForm, [field]: value });
   };
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleRecipientsChange = (recipients: string[]) => {
+    onFormChange({ ...emailForm, to: recipients });
+  };
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     const validFiles = files.filter(file => {
       const isPDF = file.type === 'application/pdf';
       const isImage = ['image/jpeg', 'image/jpg', 'image/png'].includes(file.type);
       return isPDF || isImage;
     });
+
+    // Store original files for display
     setAttachedFiles(prev => [...prev, ...validFiles]);
+
+    // Compress files and store compressed data
+    try {
+      const compressed = await compressMultipleFiles(validFiles);
+      setCompressedFiles(prev => [...prev, ...compressed]);
+      console.log('Files compressed successfully:', compressed.map(f => ({ name: f.name, ratio: f.compressionRatio.toFixed(2) + '%' })));
+    } catch (error) {
+      console.error('Error compressing files:', error);
+      alert('Failed to compress some files. They will be sent uncompressed.');
+      // Keep original files as fallback
+    }
   };
 
   const removeFile = (index: number) => {
     setAttachedFiles(prev => prev.filter((_, i) => i !== index));
+    setCompressedFiles(prev => prev.filter((_, i) => i !== index));
   };
 
   const startRecording = async () => {
@@ -100,14 +124,19 @@ export default function ComposeModal({
       const chunks: BlobPart[] = []; // Using buffer to collect audio chunks
 
       recorder.ondataavailable = (e) => {
-        chunks.push(e.data); // Buffer approach - collecting audio data chunks
-        console.log('Audio chunk received:', e.data.size, 'bytes, total chunks:', chunks.length);
+        chunks.push(e.data); // Buffer approach - collecting audio chunks
+        console.log('Audio chunk received:', e.data.size, 'bytes, MIME type:', e.data.type, 'total chunks:', chunks.length);
       };
 
       recorder.onstop = () => {
         console.log('Recording stopped. Total chunks collected:', chunks.length);
         console.log('Total buffer size:', chunks.reduce((total, chunk) => total + (chunk as Blob).size, 0), 'bytes');
-        const blob = new Blob(chunks, { type: 'audio/webm' });
+
+        // Detect the actual MIME type from the first chunk or use MediaRecorder's MIME type
+        const detectedMimeType = chunks[0] && (chunks[0] as Blob).type ? (chunks[0] as Blob).type : recorder.mimeType || 'audio/webm';
+        console.log('Detected MIME type:', detectedMimeType);
+
+        const blob = new Blob(chunks, { type: detectedMimeType });
         console.log('Final audio blob created:', blob.size, 'bytes');
         console.log('Voice Blob Details:', {
           size: blob.size,
@@ -116,6 +145,11 @@ export default function ComposeModal({
           duration: recordingTime + ' seconds'
         });
         console.log('Blob Object:', blob);
+
+        // Store the MIME type for later use
+        setAudioMimeType(detectedMimeType);
+        setAudioBlob(blob);
+
         blob.arrayBuffer()
           .then((buffer) => {
             const binaryData = new Uint8Array(buffer);
@@ -124,7 +158,6 @@ export default function ComposeModal({
           .catch((error) => {
             console.error('Error reading blob binary data:', error);
           });
-        setAudioBlob(blob);
         stream.getTracks().forEach(track => track.stop());
       };
 
@@ -167,7 +200,6 @@ export default function ComposeModal({
     const audioElement = audioRef.current;
     if (!audioElement || !audioUrl) return;
 
-    audioElement.currentTime = 0;
     audioElement.play().catch((error) => {
       console.error('Error playing audio:', error);
     });
@@ -177,6 +209,49 @@ export default function ComposeModal({
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // Function to get compressed files data for sending
+  const getCompressedFilesData = (): CompressedFile[] => {
+    return compressedFiles;
+  };
+
+  // Function to compress audio data before sending
+  const getCompressedAudioData = async (): Promise<string | null> => {
+    if (!audioBlob) return null;
+
+    try {
+      console.log('Compressing audio data for transmission...');
+      console.log('Audio MIME type:', audioMimeType);
+
+      const arrayBuffer = await blobToArrayBuffer(audioBlob);
+      const compressedAudio = compressAudioForSender(arrayBuffer);
+
+      // Include MIME type in the compressed data for receiver
+      const audioDataWithMimeType = `${audioMimeType}:${compressedAudio}`;
+
+      console.log('Audio compressed successfully with MIME type');
+      return audioDataWithMimeType;
+    } catch (error) {
+      console.error('Error compressing audio:', error);
+      throw new Error('Failed to compress audio for transmission');
+    }
+  };
+
+  // Handle form submission with audio and file data
+  const handleFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    try {
+      const compressedAudio = await getCompressedAudioData();
+      const compressedFilesData = getCompressedFilesData();
+
+      // Pass both audio and files data to parent
+      onSend(e, compressedAudio || undefined, compressedFilesData);
+    } catch (error) {
+      console.error('Error preparing email for sending:', error);
+      alert('Failed to prepare attachments for sending');
+    }
   };
 
   return (
@@ -210,22 +285,19 @@ export default function ComposeModal({
 
           {/* Compose Form */}
           <div className="flex-1 overflow-y-auto min-h-0 overscroll-contain">
-            <form onSubmit={onSend} className="p-3 sm:p-4 lg:p-6 space-y-3 sm:space-y-4 pb-24 sm:pb-20">
+            <form onSubmit={handleFormSubmit} className="p-3 sm:p-4 lg:p-6 space-y-3 sm:space-y-4 pb-24 sm:pb-20">
               <div>
                 <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1.5 sm:mb-2">To</label>
-                <input
-                  type="email"
-                  value={emailForm.to}
-                  onChange={(e) => handleInputChange('to', e.target.value)}
-                  className="w-full bg-gray-800 border border-gray-600 rounded-lg px-2.5 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="recipient@example.com"
-                  required
+                <RecipientInput
+                  recipients={emailForm.to}
+                  onChange={handleRecipientsChange}
+                  placeholder="Add recipients..."
                 />
               </div>
 
               {/* Security Level Selector - Mobile & Desktop */}
               <div>
-                <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1.5 sm:mb-2 flex items-center gap-2">
+                <label className="flex text-xs sm:text-sm font-medium text-gray-300 mb-1.5 sm:mb-2 items-center gap-2">
                   <Shield className="w-4 h-4 text-blue-400" />
                   <span>Encryption Type</span>
                 </label>
@@ -261,90 +333,6 @@ export default function ComposeModal({
                 />
               </div>
 
-              {/* Key Size Selector - Show for OTP and QKD only */}
-              {(emailForm.type === 'OTP' || emailForm.type === 'QKD') && (
-                <div className="bg-gray-800/70 border border-gray-700 rounded-xl p-3 sm:p-4 space-y-3 sm:space-y-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex flex-col gap-1">
-                      <label className="text-sm font-semibold text-white flex items-center space-x-2">
-                        <Key className={`w-4 h-4 ${emailForm.type === 'OTP' ? 'text-green-400' : 'text-blue-400'}`} />
-                        <span>Quantum Key Size</span>
-                      </label>
-                      <p className="text-xs text-gray-400 leading-relaxed">
-                        Select key length for encryption. Larger keys = stronger security.
-                      </p>
-                    </div>
-                    <span className={`text-sm font-bold ${emailForm.type === 'OTP' ? 'text-green-400' : 'text-blue-400'} whitespace-nowrap`}>
-                      {keySize} KB<br />({keySize * 1024} bits)
-                    </span>
-                  </div>
-
-                  <div className="space-y-2">
-                    <input
-                      type="range"
-                      min="1"
-                      max="100"
-                      value={keySize}
-                      onChange={(e) => setKeySize(Number(e.target.value))}
-                      className={`w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer ${emailForm.type === 'OTP' ? 'accent-green-500' : 'accent-blue-500'}`}
-                    />
-                    <div className="flex justify-between text-xs text-gray-400">
-                      <span>1 KB</span>
-                      <span>100 KB</span>
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      setGeneratingKey(true);
-                      setKeyError(null);
-                      try {
-                        const response = await fetch('/auth/generate', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ keySize: keySize * 1024 })
-                        });
-                        if (!response.ok) throw new Error('Key generation failed');
-                        const data = await response.json();
-                        setGeneratedKey(data.key || 'Key generated successfully');
-                      } catch (error) {
-                        setKeyError(error instanceof Error ? error.message : 'Failed to generate key');
-                      } finally {
-                        setGeneratingKey(false);
-                      }
-                    }}
-                    disabled={generatingKey}
-                    className={`w-full flex items-center justify-center gap-2 ${emailForm.type === 'OTP' ? 'bg-green-600 hover:bg-green-500' : 'bg-blue-600 hover:bg-blue-500'} disabled:bg-gray-600 text-white px-4 py-2.5 rounded-lg transition-colors text-sm font-semibold`}
-                  >
-                    {generatingKey ? (
-                      <>
-                        <RefreshCw className="w-4 h-4 animate-spin" />
-                        <span>Generating...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Key className="w-4 h-4" />
-                        <span>Generate Key</span>
-                      </>
-                    )}
-                  </button>
-
-                  {generatedKey && (
-                    <div className={`border ${emailForm.type === 'OTP' ? 'border-green-500/30 bg-green-900/20' : 'border-blue-500/30 bg-blue-900/20'} rounded-lg p-3`}>
-                      <p className={`text-xs ${emailForm.type === 'OTP' ? 'text-green-400' : 'text-blue-400'} font-mono break-all`}>
-                        {generatedKey.substring(0, 60)}...
-                      </p>
-                    </div>
-                  )}
-
-                  {keyError && (
-                    <div className="bg-red-900/20 border border-red-500/40 rounded-lg p-3">
-                      <p className="text-xs text-red-400">{keyError}</p>
-                    </div>
-                  )}
-                </div>
-              )}
 
               <div>
                 <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1.5 sm:mb-2">Message</label>
@@ -374,7 +362,12 @@ export default function ComposeModal({
                                 <ImageIcon className="w-4 h-4 text-blue-400" />
                               )}
                               <span className="text-sm text-gray-300 truncate max-w-xs">{file.name}</span>
-                              <span className="text-xs text-gray-500">({(file.size / 1024).toFixed(1)} KB)</span>
+                              <span className="text-xs text-gray-500">({formatFileSize(file.size)})</span>
+                              {compressedFiles[index] && (
+                                <span className="text-xs text-green-400 ml-1">
+                                  ({compressedFiles[index].compressionRatio.toFixed(1)}% saved)
+                                </span>
+                              )}
                             </div>
                             <button
                               type="button"
@@ -388,7 +381,7 @@ export default function ComposeModal({
                       </div>
                     </div>
                   )}
-                  
+
                   {audioBlob && (
                     <div className="space-y-2">
                       <p className="text-xs text-gray-400">Voice Recording:</p>
@@ -429,7 +422,7 @@ export default function ComposeModal({
                   <div className="text-xs sm:text-sm text-gray-400 whitespace-nowrap">
                     {emailForm.body.length} / 12000 char
                   </div>
-                  
+
                   {/* Attachment Buttons */}
                   <div className="flex items-center space-x-1">
                     {/* File Attachment */}
@@ -466,11 +459,11 @@ export default function ComposeModal({
                         >
                           <StopCircle className="w-4 h-4" />
                         </button>
-                        
+
                         {/* Recording Progress Bar */}
                         <div className="flex items-center space-x-2">
                           <div className="w-20 h-2 bg-gray-700 rounded-full overflow-hidden">
-                            <div 
+                            <div
                               className="h-full bg-red-500 transition-all duration-1000 ease-linear"
                               style={{ width: `${(recordingTime / 10) * 100}%` }}
                             />
@@ -483,9 +476,9 @@ export default function ComposeModal({
                     )}
                   </div>
                 </div>
-                
+
                 <div className="flex space-x-2 sm:space-x-3 w-full sm:w-auto">
-                  <button 
+                  <button
                     type="button"
                     className="flex-1 sm:flex-none px-4 sm:px-6 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors flex items-center justify-center space-x-1.5 sm:space-x-2 text-sm sm:text-base"
                   >
@@ -493,10 +486,10 @@ export default function ComposeModal({
                     <span className="hidden sm:inline">Save Draft</span>
                     <span className="sm:hidden">Save</span>
                   </button>
-                  
+
                   <button
                     type="submit"
-                    disabled={loading || !emailForm.to.trim() || !emailForm.subject.trim()}
+                    disabled={loading || emailForm.to.length === 0 || !emailForm.subject.trim()}
                     className="flex-1 sm:flex-none px-4 sm:px-6 py-2 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg transition-colors flex items-center justify-center space-x-1.5 sm:space-x-2 text-sm sm:text-base"
                   >
                     {loading ? (
@@ -519,7 +512,7 @@ export default function ComposeModal({
 
         {/* Security Panel - stacks below on mobile, sidebar on desktop */}
         <div className="w-full lg:w-80 xl:w-96 flex-shrink-0">
-          <SecurityPanel 
+          <SecurityPanel
             selectedType={emailForm.type}
             onTypeChange={(type) => handleInputChange('type', type)}
           />

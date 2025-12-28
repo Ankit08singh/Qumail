@@ -207,9 +207,9 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onTryNow, onLearnMore }) => {
           <div className="absolute top-8 right-4 w-12 h-12 bg-[#EC710A]/20 backdrop-blur-lg border border-[#EC710A]/30 rounded-xl flex items-center justify-center animate-float" style={{ animationDelay: '1s' }}>
             <Zap className="w-5 h-5 text-[#EC710A]" />
           </div>
-          <div className="absolute bottom-32 left-4 w-12 h-12 bg-cyan-600/20 backdrop-blur-lg border border-cyan-500/30 rounded-xl flex items-center justify-center animate-float" style={{ animationDelay: '2s' }}>
+          {/* <div className="absolute bottom-32 left-4 w-12 h-12 bg-cyan-600/20 backdrop-blur-lg border border-cyan-500/30 rounded-xl flex items-center justify-center animate-float" style={{ animationDelay: '2s' }}>
             <Lock className="w-5 h-5 text-cyan-400" />
-          </div>
+          </div> */}
         </div>
 
         {/* Desktop floating feature cards */}
@@ -220,9 +220,9 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onTryNow, onLearnMore }) => {
           <div className="absolute top-10 right-10 w-20 h-20 bg-[#EC710A]/20 backdrop-blur-lg border border-[#EC710A]/30 rounded-2xl flex items-center justify-center animate-float" style={{ animationDelay: '1s' }}>
             <Zap className="w-8 h-8 text-[#EC710A]" />
           </div>
-          <div className="absolute bottom-20 left-20 w-20 h-20 bg-cyan-600/20 backdrop-blur-lg border border-cyan-500/30 rounded-2xl flex items-center justify-center animate-float" style={{ animationDelay: '2s' }}>
+          {/* <div className="absolute bottom-20 left-20 w-20 h-20 bg-cyan-600/20 backdrop-blur-lg border border-cyan-500/30 rounded-2xl flex items-center justify-center animate-float" style={{ animationDelay: '2s' }}>
             <Lock className="w-8 h-8 text-cyan-400" />
-          </div>
+          </div> */}
         </div>
 
         {/* Enhanced main heading with better mobile typography */}

@@ -2,6 +2,7 @@ import { useSession } from "next-auth/react";
 import { GetServerSideProps } from "next";
 import { getSession } from "next-auth/react";
 import { useState, useEffect, useRef } from "react";
+import { compressMultipleFiles, CompressedFile } from "@/utils/fileCompression";
 import EmailViewer from '@/components/EmailViewer';
 import TopHeader from '@/components/dashboard/TopHeader';
 import Sidebar from '@/components/dashboard/Sidebar';
@@ -25,7 +26,7 @@ export default function Dashboard() {
   const activeViewRef = useRef(activeView);
   // Email form state
   const [emailForm, setEmailForm] = useState<EmailForm>({
-    to: '',
+    to: [],
     subject: '',
     body: '',
     isHtml: false,
@@ -96,6 +97,7 @@ export default function Dashboard() {
       starred: 0,
       archive: 0,
       trash: 0,
+      spam: 0,
       drafts: 0
     };
 
@@ -104,10 +106,13 @@ export default function Dashboard() {
       const isDeleted = message.labelIds?.includes('TRASH') || message.labelIds?.includes('DELETED');
       const isArchived = message.labelIds?.includes('ARCHIVE') || message.labelIds?.includes('ARCHIVED');
       const isStarred = message.labelIds?.includes('STARRED');
+      const isSpam = message.labelIds?.includes('SPAM');
       // For Outlook, use SENT label; for Gmail, compare sender email
       const isSent = provider === 'azure-ad' ? message.labelIds?.includes('SENT') : senderEmail === userEmail;
 
-      if (isDeleted) {
+      if (isSpam) {
+        counts.spam++;
+      } else if (isDeleted) {
         counts.trash++;
       } else if (isArchived) {
         counts.archive++;
@@ -117,7 +122,7 @@ export default function Dashboard() {
         counts.inbox++;
       }
 
-      if (isStarred && !isDeleted && !isArchived) {
+      if (isStarred && !isDeleted && !isArchived && !isSpam) {
         counts.starred++;
       }
     });
@@ -132,16 +137,18 @@ export default function Dashboard() {
     const senderEmail = extractEmail(message.sender || '');
     const isDeleted = message.labelIds?.includes('TRASH') || message.labelIds?.includes('DELETED');
     const isArchived = message.labelIds?.includes('ARCHIVE') || message.labelIds?.includes('ARCHIVED');
+    const isSpam = message.labelIds?.includes('SPAM');
     const isSent = provider === 'azure-ad' ? message.labelIds?.includes('SENT') : senderEmail === userEmail;
-    return !isSent && !isDeleted && !isArchived;
+    return !isSent && !isDeleted && !isArchived && !isSpam;
   });
 
   const sentMessages = messages.filter((message) => {
     const senderEmail = extractEmail(message.sender || '');
     const isDeleted = message.labelIds?.includes('TRASH') || message.labelIds?.includes('DELETED');
     const isArchived = message.labelIds?.includes('ARCHIVE') || message.labelIds?.includes('ARCHIVED');
+    const isSpam = message.labelIds?.includes('SPAM');
     const isSent = provider === 'azure-ad' ? message.labelIds?.includes('SENT') : senderEmail === userEmail;
-    return isSent && !isDeleted && !isArchived;
+    return isSent && !isDeleted && !isArchived && !isSpam;
   });
 
   // Debug logging (can be removed in production)
@@ -158,8 +165,14 @@ export default function Dashboard() {
     const isDeleted = message.labelIds?.includes('TRASH') || message.labelIds?.includes('DELETED');
     const isArchived = message.labelIds?.includes('ARCHIVE') || message.labelIds?.includes('ARCHIVED');
     const isStarred = message.labelIds?.includes('STARRED');
+    const isSpam = message.labelIds?.includes('SPAM');
     // For Outlook, use SENT label; for Gmail, compare sender email
     const isSent = provider === 'azure-ad' ? message.labelIds?.includes('SENT') : senderEmail === userEmail;
+
+    // Don't show spam emails in any tab except spam
+    if (isSpam && activeView !== 'spam') {
+      return false;
+    }
 
     // Don't show deleted emails in any tab except trash
     if (isDeleted && activeView !== 'trash') {
@@ -173,16 +186,20 @@ export default function Dashboard() {
 
     switch (activeView) {
       case 'inbox':
-        // Show unarchived, undeleted emails received by the user
-        return !isSent && !isArchived && !isDeleted;
+        // Show unarchived, undeleted, non-spam emails received by the user
+        return !isSent && !isArchived && !isDeleted && !isSpam;
         
       case 'sent':
-        // Show unarchived, undeleted emails sent by the user
-        return isSent && !isArchived && !isDeleted;
+        // Show unarchived, undeleted, non-spam emails sent by the user
+        return isSent && !isArchived && !isDeleted && !isSpam;
         
       case 'starred':
-        // Show starred emails that are not archived or deleted
-        return isStarred && !isArchived && !isDeleted;
+        // Show starred emails that are not archived, deleted, or spam
+        return isStarred && !isArchived && !isDeleted && !isSpam;
+        
+      case 'spam':
+        // Show only spam emails
+        return isSpam;
         
       case 'archive':
         // Show only archived emails
@@ -207,16 +224,30 @@ export default function Dashboard() {
   };
 
   // Handle compose send
-  const handleSend = async (e: React.FormEvent) => {
+  const handleSend = async (e: React.FormEvent, audioData?: string, filesData?: CompressedFile[]) => {
     e.preventDefault();
     setSendingEmail(true);
     try {
-      // Both Gmail and Outlook now use the same backend endpoint
-      const res = await API.post('/auth/send-encrypted-email', emailForm);
-      console.log("Email sent successfully via backend:", res);
+      // Prepare email body with attachments
+      let finalBody = emailForm.body;
+      
+      // Add audio data if present
+      if (audioData) {
+        finalBody = `${finalBody}\n\nAUDIO_COMPRESSED:${audioData}`;
+      }
+      
+      // Add file attachments if present
+      if (filesData && filesData.length > 0) {
+        finalBody = `${finalBody}\n\nFILES_COMPRESSED:${JSON.stringify(filesData)}`;
+      }
+
+      // Both Gmail and Outlook use backend encryption endpoint
+      const emailData = { ...emailForm, body: finalBody };
+      const res = await API.post('/auth/send-encrypted-email', emailData);
+      console.log(`${provider === 'azure-ad' ? 'Outlook' : 'Gmail'} email sent successfully:`, res);
       alert('Email sent successfully!');
       
-      setEmailForm({ to: '', subject: '', body: '', isHtml: false, type: 'AES' });
+      setEmailForm({ to: [], subject: '', body: '', isHtml: false, type: 'AES' });
       setShowCompose(false);
       setActiveView('inbox');
       // Refresh messages to show the sent email
@@ -285,6 +316,7 @@ export default function Dashboard() {
           starredCount={tabCounts.starred}
           archiveCount={tabCounts.archive}
           trashCount={tabCounts.trash}
+          spamCount={tabCounts.spam}
           draftsCount={tabCounts.drafts}
           onComposeClick={() => setShowCompose(true)}
           isOpen={isSidebarOpen}

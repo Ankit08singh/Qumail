@@ -61,11 +61,10 @@ export const authOptions = {
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
       authorization: { params: GOOGLE_AUTHORIZATION_PARAMS }
     }),
-    // Azure AD supports both personal and work/school Microsoft accounts with tenantId: "common"
     AzureADProvider({
       clientId: process.env.AZURE_AD_CLIENT_ID!,
       clientSecret: process.env.AZURE_AD_CLIENT_SECRET!,
-      tenantId: process.env.AZURE_AD_TENANT_ID!, // "common" allows both personal and organizational accounts
+      tenantId: process.env.AZURE_AD_TENANT_ID!,
       authorization: {
         params: {
           scope: "openid email profile offline_access Mail.Read Mail.ReadWrite Mail.Send",

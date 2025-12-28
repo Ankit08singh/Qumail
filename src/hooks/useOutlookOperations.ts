@@ -117,28 +117,25 @@ export function useOutlookOperations(accessToken: string | undefined) {
     }
   };
 
-  const sendEmail = async (emailForm: { to: string; subject: string; body: string; isHtml?: boolean; type?: string }) => {
+  const sendEmail = async (emailData: {
+    to: string;
+    subject: string;
+    body: string;
+    isHtml?: boolean;
+  }) => {
     if (!accessToken) {
       throw new Error('No access token available');
     }
 
     try {
-      // Use the same backend endpoint as Gmail
-      const API = (await import('@/utils/axios')).default;
-      const response = await API.post('/auth/send-encrypted-email', emailForm);
-      
-      if (!response || !response.data) {
-        throw new Error('Failed to send email - no response data');
-      }
-      
-      console.log('Outlook email sent via backend:', response.data);
+      await sendOutlookEmail(accessToken, emailData);
     } catch (err: any) {
       console.error('Error sending Outlook email:', err);
       throw err;
     }
   };
 
-  // Decrypt email function (call backend API like Gmail)
+  // Decrypt email function (same logic as Gmail)
   const [decryptLoading, setDecryptLoading] = useState(false);
   const [decryptedContent, setDecryptedContent] = useState<string | null>(null);
 
@@ -149,56 +146,19 @@ export function useOutlookOperations(accessToken: string | undefined) {
     try {
       const bodyContent = email.bodyContent || '';
       
-      // Check if email has encryption markers
-      if (bodyContent.includes('--- ENCRYPTED METADATA ---') && bodyContent.includes('--- ENCRYPTED PAYLOAD ---')) {
-        // Extract encrypted data from email body
-        const metadataMatch = bodyContent.match(/--- ENCRYPTED METADATA ---\n([\s\S]*?)\n--- END METADATA ---/);
-        const payloadMatch = bodyContent.match(/--- ENCRYPTED PAYLOAD ---\n([\s\S]*?)\n--- END/);
-        
-        if (metadataMatch && payloadMatch) {
-          const metadataJson = metadataMatch[1].trim();
-          const encryptedPayload = payloadMatch[1].trim().replace(/\s+/g, '');
-          
-          // Parse metadata
-          let metadata: any = {};
-          try {
-            // Try parsing as JSON first
-            metadata = JSON.parse(metadataJson);
-          } catch {
-            // If not JSON, parse key-value pairs
-            metadataJson.split('\n').forEach(line => {
-              const [key, ...valueParts] = line.split(':');
-              if (key && valueParts.length > 0) {
-                metadata[key.trim()] = valueParts.join(':').trim();
-              }
-            });
-          }
-          
-          // Call backend API to decrypt
-          const API = (await import('@/utils/axios')).default;
-          const response = await API.post('/auth/decrypt-email', {
-            encryptedPayload: encryptedPayload,
-            metadata: metadata,
-            senderEmail: email.sender
-          });
-          
-          if (response && response.data) {
-            const message = response.data.message;
-            const messageText = typeof message === 'string' ? message : JSON.stringify(message, null, 2);
-            setDecryptedContent(messageText);
-          } else {
-            throw new Error('Failed to decrypt - no response data');
-          }
+      if (bodyContent.includes('[AES ENCRYPTED]') || bodyContent.includes('[QKD ENCRYPTED]')) {
+        const payloadMatch = bodyContent.match(/--- ENCRYPTED PAYLOAD ---\n([\s\S]*?)\n--- END PAYLOAD ---/);
+        if (payloadMatch && payloadMatch[1]) {
+          setDecryptedContent(payloadMatch[1].trim());
         } else {
           setDecryptedContent('Could not extract encrypted payload');
         }
       } else {
-        // Not encrypted, just show the content
         setDecryptedContent(bodyContent);
       }
     } catch (error) {
       console.error('Error decrypting email:', error);
-      setDecryptedContent('Error decrypting email: ' + (error instanceof Error ? error.message : 'Unknown error'));
+      setDecryptedContent('Error decrypting email');
       setError('Error decrypting email');
     } finally {
       setDecryptLoading(false);

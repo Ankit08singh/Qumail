@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   ArrowLeft,
   Star,
@@ -17,9 +17,14 @@ import {
   Link,
   Lock,
   Unlock,
-  Loader2
+  Loader2,
+  Play,
+  Pause,
+  Volume2
 } from 'lucide-react';
 import API from '@/utils/axios';
+import { decompressAudioForReceiver, createAudioBlob, createAudioUrl } from '@/utils/audioCompression';
+import { decompressFileForReceiver, createFileFromBlob, CompressedFile } from '@/utils/fileCompression';
 
 interface GmailMessage {
   id: string;
@@ -74,6 +79,12 @@ const EmailViewer: React.FC<EmailViewerProps> = ({
   const [localDecryptLoading, setLocalDecryptLoading] = useState(false);
   const [localDecryptedContent, setLocalDecryptedContent] = useState<string | null>(null);
   const [emailBodyContent, setEmailBodyContent] = useState<string>(email.bodyContent || email.body || '');
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [audioLoading, setAudioLoading] = useState(false);
+  const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
+  const [filesLoading, setFilesLoading] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   
   const decryptLoading = externalDecryptLoading !== undefined ? externalDecryptLoading : localDecryptLoading;
   const decryptedContent = externalDecryptedContent !== undefined ? externalDecryptedContent : localDecryptedContent;
@@ -177,6 +188,170 @@ const EmailViewer: React.FC<EmailViewerProps> = ({
       hour12: true
     });
   };
+
+  // File download handler
+  const handleFileDownload = (file: File) => {
+    try {
+      // Create download link
+      const url = URL.createObjectURL(file);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = file.name;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      console.log('File downloaded successfully:', file.name);
+    } catch (error) {
+      console.error('Error downloading file:', error);
+      alert('Failed to download file: ' + (error as Error).message);
+    }
+  };
+
+  // File handling functions
+  const processFileData = async (filesDataString: string) => {
+    try {
+      setFilesLoading(true);
+      console.log('Processing compressed file data...');
+      
+      // Parse the compressed files data
+      const compressedFiles: CompressedFile[] = JSON.parse(filesDataString);
+      console.log('Found', compressedFiles.length, 'compressed files');
+      
+      const reconstructedFiles: File[] = [];
+      
+      // Process each compressed file
+      for (const compressedFile of compressedFiles) {
+        console.log('Processing file:', compressedFile.name);
+        
+        // Decompress file Parminder
+        const fileBlob = decompressFileForReceiver(compressedFile);
+        
+        // Create File object
+        const file = createFileFromBlob(fileBlob, compressedFile);
+        reconstructedFiles.push(file);
+        
+        console.log('File reconstructed successfully:', compressedFile.name);
+      }
+      
+      setAttachedFiles(reconstructedFiles);
+      console.log('All files processed successfully');
+    } catch (error) {
+      console.error('Error processing files:', error);
+      alert('Failed to process file attachments: ' + (error as Error).message);
+    } finally {
+      setFilesLoading(false);
+    }
+  };
+
+  // Audio handling functions
+  const processAudioData = async (audioDataWithMimeType: string) => {
+    try {
+      setAudioLoading(true);
+      console.log('Processing compressed audio data...');
+      
+      // Extract MIME type and compressed data
+      const colonIndex = audioDataWithMimeType.indexOf(':');
+      if (colonIndex === -1) {
+        throw new Error('Invalid audio data format - missing colon separator');
+      }
+      
+      const mimeType = audioDataWithMimeType.substring(0, colonIndex);
+      const compressedAudioBase64 = audioDataWithMimeType.substring(colonIndex + 1);
+      
+      if (!compressedAudioBase64) {
+        throw new Error('Invalid audio data format - missing compressed data');
+      }
+      
+      console.log('Audio MIME type:', mimeType);
+      console.log('Compressed data length:', compressedAudioBase64.length);
+      
+      // Decompress audio data
+      const audioData = decompressAudioForReceiver(compressedAudioBase64);
+      
+      // Create audio blob with the correct MIME type
+      const audioBlob = createAudioBlob(audioData, mimeType || 'audio/webm');
+      
+      // Create audio URL
+      const url = createAudioUrl(audioBlob);
+      setAudioUrl(url);
+      
+      console.log('Audio processed successfully with MIME type:', mimeType);
+      console.log('Final audio data size:', audioData.length);
+    } catch (error) {
+      console.error('Error processing audio:', error);
+      alert('Failed to process audio message: ' + (error as Error).message);
+    } finally {
+      setAudioLoading(false);
+    }
+  };
+
+  // Clean decrypted content to hide raw audio and file data
+  const getCleanDecryptedContent = (content: string) => {
+    if (!content) return content;
+    
+    // Remove both AUDIO_COMPRESSED and FILES_COMPRESSED parts from display
+    let cleanedContent = content;
+    cleanedContent = cleanedContent.replace(/AUDIO_COMPRESSED:[\s\S]*$/, '').trim();
+    cleanedContent = cleanedContent.replace(/FILES_COMPRESSED:[\s\S]*$/, '').trim();
+    return cleanedContent;
+  };
+
+  const handlePlayPause = () => {
+    if (!audioRef.current || !audioUrl) return;
+    
+    console.log('Play/Pause clicked, current state:', {
+      isPlaying,
+      audioUrl: audioUrl ? 'exists' : 'missing',
+      audioElement: audioRef.current ? 'exists' : 'missing',
+      paused: audioRef.current.paused,
+      ended: audioRef.current.ended,
+      readyState: audioRef.current.readyState
+    });
+    
+    if (isPlaying) {
+      audioRef.current.pause();
+      console.log('Audio paused');
+    } else {
+      audioRef.current.play().then(() => {
+        console.log('Audio play successful');
+      }).catch((error) => {
+        console.error('Error playing audio:', error);
+        alert('Failed to play audio: ' + error.message);
+      });
+    }
+    setIsPlaying(!isPlaying);
+  };
+
+  // Check if decrypted content contains compressed audio and files
+  useEffect(() => {
+    if (decryptedContent) {
+      // Process audio data
+      if (decryptedContent.includes('AUDIO_COMPRESSED:')) {
+        const audioMatch = decryptedContent.match(/AUDIO_COMPRESSED:(.+)/);
+        if (audioMatch && audioMatch[1]) {
+          processAudioData(audioMatch[1].trim());
+        }
+      }
+      
+      // Process file data
+      if (decryptedContent.includes('FILES_COMPRESSED:')) {
+        const filesMatch = decryptedContent.match(/FILES_COMPRESSED:(.+)/);
+        if (filesMatch && filesMatch[1]) {
+          processFileData(filesMatch[1].trim());
+        }
+      }
+    }
+  }, [decryptedContent]);
+
+  // Cleanup audio URL on unmount
+  useEffect(() => {
+    return () => {
+      if (audioUrl) {
+        URL.revokeObjectURL(audioUrl);
+      }
+    };
+  }, [audioUrl]);
 
   return (
     <div className="flex-1 bg-white dark:bg-gray-900 flex flex-col h-full">
@@ -339,13 +514,13 @@ const EmailViewer: React.FC<EmailViewerProps> = ({
               <div className="text-gray-800 dark:text-gray-300 leading-relaxed text-sm sm:text-base break-words overflow-wrap-anywhere">
                 {/* Display main email content */}
                 {decryptedContent ? (
-                  // Show decrypted content (always as plain text)
+                  // Show decrypted content (always as plain text) but hide raw audio data
                   <div className="whitespace-pre-wrap">
                     <div className="flex items-center space-x-2 mb-4">
                       <Unlock className="w-5 h-5 text-green-600" />
                       <span className="text-green-600 dark:text-green-400 font-semibold">Decrypted Message</span>
                     </div>
-                    {decryptedContent}
+                    {getCleanDecryptedContent(decryptedContent)}
                   </div>
                 ) : (
                   <div className={`${email.isEncrypted && emailBodyContent ? 'font-mono text-sm break-all' : ''}`}>
@@ -392,6 +567,116 @@ const EmailViewer: React.FC<EmailViewerProps> = ({
                 )}
               </div>
             </div>
+
+            {/* Audio Player Section - Show when audio is available */}
+            {audioUrl && (
+              <div className="bg-green-100/50 dark:bg-green-900/30 border border-green-300 dark:border-green-700 rounded-lg lg:rounded-2xl p-3 sm:p-4">
+                <div className="flex items-center space-x-2 mb-3">
+                  <Volume2 className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 dark:text-green-400" />
+                  <span className="text-green-600 dark:text-green-400 font-semibold text-sm sm:text-base">Voice Message</span>
+                </div>
+                
+                <div className="flex items-center justify-center gap-3">
+                  <button
+                    onClick={handlePlayPause}
+                    disabled={audioLoading}
+                    className="flex items-center justify-center w-12 h-12 bg-green-600 hover:bg-green-500 disabled:bg-gray-400 text-white rounded-full transition-colors"
+                    title={isPlaying ? 'Pause' : 'Play'}
+                  >
+                    {audioLoading ? (
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    ) : isPlaying ? (
+                      <Pause className="w-5 h-5" />
+                    ) : (
+                      <Play className="w-5 h-5" />
+                    )}
+                  </button>
+                  
+                  <div className="flex-1">
+                    <div className="text-xs text-gray-600 dark:text-gray-400">
+                      {isPlaying ? 'Playing voice message...' : 'Click to play voice message'}
+                    </div>
+                  </div>
+                </div>
+                
+                <audio
+                  ref={audioRef}
+                  src={audioUrl}
+                  onPlay={() => setIsPlaying(true)}
+                  onPause={() => setIsPlaying(false)}
+                  onEnded={() => setIsPlaying(false)}
+                  onError={(e) => {
+                    console.error('Audio error:', e);
+                    console.error('Audio error details:', audioRef.current?.error);
+                    alert('Failed to load audio: ' + (audioRef.current?.error?.message || 'Unknown error'));
+                  }}
+                  onLoadStart={() => console.log('Audio load started')}
+                  onCanPlay={() => console.log('Audio can play')}
+                  onLoadedMetadata={(e) => {
+                    console.log('Audio metadata loaded:', {
+                      duration: audioRef.current?.duration,
+                      readyState: audioRef.current?.readyState
+                    });
+                  }}
+                  preload="metadata"
+                  className="hidden"
+                />
+              </div>
+            )}
+
+            {/* File Attachments Section - Show when files are available */}
+            {attachedFiles.length > 0 && (
+              <div className="bg-blue-100/50 dark:bg-blue-900/30 border border-blue-300 dark:border-blue-700 rounded-lg lg:rounded-2xl p-3 sm:p-4">
+                <div className="flex items-center space-x-2 mb-3">
+                  <Paperclip className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 dark:text-blue-400" />
+                  <span className="text-blue-600 dark:text-blue-400 font-semibold text-sm sm:text-base">
+                    {attachedFiles.length} Attachment{attachedFiles.length > 1 ? 's' : ''}
+                  </span>
+                </div>
+                
+                {filesLoading ? (
+                  <div className="flex items-center justify-center py-4">
+                    <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
+                    <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">Processing files...</span>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {attachedFiles.map((file, index) => (
+                      <div key={index} className="flex items-center justify-between bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg p-2 sm:p-3">
+                        <div className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
+                          {file.type === 'application/pdf' ? (
+                            <div className="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 bg-red-100 dark:bg-red-900/30 rounded flex items-center justify-center">
+                              <span className="text-red-600 dark:text-red-400 text-xs sm:text-sm font-bold">PDF</span>
+                            </div>
+                          ) : file.type.includes('image') ? (
+                            <div className="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 bg-blue-100 dark:bg-blue-900/30 rounded flex items-center justify-center">
+                              <span className="text-blue-600 dark:text-blue-400 text-xs sm:text-sm font-bold">IMG</span>
+                            </div>
+                          ) : (
+                            <div className="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 bg-gray-100 dark:bg-gray-700 rounded flex items-center justify-center">
+                              <Paperclip className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600 dark:text-gray-400" />
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{file.name}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                              {(file.size / 1024).toFixed(1)} KB
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => handleFileDownload(file)}
+                          className="flex-shrink-0 p-1.5 sm:p-2 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+                          title={`Download ${file.name}`}
+                        >
+                          <Download className="w-4 h-4 sm:w-5 sm:h-5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Show encrypted content details if available */}
             {email.isEncrypted && email.bodyContent && !decryptedContent && (
